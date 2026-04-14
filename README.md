@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 <p align="center">
-  <b>English</b> | <a href="#cn">中文说明</a>
+  <b>English</b> | <a href="#cn">CN</a>
 </p>
 
 ## Overview
@@ -32,17 +32,17 @@ The repository includes two frontend entry pages:
 - `gai.html`: desktop dashboard for system monitoring, analysis, and control
 - `mobile-control.html`: lightweight mobile control panel
 
-### Desktop Dashboard
+### Hero Preview
 
-![Desktop Dashboard](docs/screenshots/frontend-desktop.png)
+![Frontend Showcase Hero](docs/showcase/showcase-hero.png)
 
-### Mobile Control Panel
+### Demo GIF
 
 <p align="center">
-  <img src="docs/screenshots/frontend-mobile.png" alt="Mobile Control Panel" width="320">
+  <img src="docs/showcase/showcase-demo.gif" alt="Frontend Demo GIF" width="720">
 </p>
 
-If you want a more vivid presentation on GitHub, the next best step is to add a short GIF walkthrough. GitHub README image embedding is more reliable than inline video playback.
+These assets are generated from the real frontend pages in the repository, so the README preview stays aligned with the current UI.
 
 ## Key Differentiators
 
@@ -190,6 +190,9 @@ smart-home-multi-agent/
 |-- docs/
 |   |-- architecture.svg
 |   |-- agent-pipeline.svg
+|   |-- showcase/
+|   |   |-- showcase-hero.png
+|   |   `-- showcase-demo.gif
 |   `-- screenshots/
 |       |-- frontend-desktop.png
 |       `-- frontend-mobile.png
