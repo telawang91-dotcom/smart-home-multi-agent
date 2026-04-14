@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 340" font-family="system-ui,-apple-system,sans-serif">
+  <defs>
+    <linearGradient id="p1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#667eea"/><stop offset="100%" stop-color="#764ba2"/></linearGradient>
+    <linearGradient id="p2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4facfe"/><stop offset="100%" stop-color="#00f2fe"/></linearGradient>
+    <linearGradient id="p3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#43e97b"/><stop offset="100%" stop-color="#38f9d7"/></linearGradient>
+    <linearGradient id="p4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fa709a"/><stop offset="100%" stop-color="#fee140"/></linearGradient>
+    <linearGradient id="p5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f093fb"/><stop offset="100%" stop-color="#f5576c"/></linearGradient>
+    <filter id="s2"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/></filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="860" height="340" rx="14" fill="#0f0c29"/>
+
+  <!-- Title -->
+  <text x="430" y="32" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">Agent Decision Pipeline — 4-Step Reasoning Chain</text>
+
+  <!-- Step 1: Supervisor -->
+  <rect x="20" y="55" width="150" height="100" rx="12" fill="url(#p1)" filter="url(#s2)"/>
+  <text x="95" y="80" text-anchor="middle" fill="#fff" font-size="24">🧠</text>
+  <text x="95" y="102" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Supervisor</text>
+  <text x="95" y="118" text-anchor="middle" fill="#e2e8f0" font-size="9">Task Init</text>
+  <text x="95" y="132" text-anchor="middle" fill="#e2e8f0" font-size="9">Route to Workers</text>
+  <text x="95" y="146" text-anchor="middle" fill="#e2e8f0" font-size="9">Re-plan on Failure</text>
+
+  <!-- Arrow -->
+  <line x1="170" y1="105" x2="200" y2="105" stroke="#a78bfa" stroke-width="2.5"/>
+  <polygon points="198,100 208,105 198,110" fill="#a78bfa"/>
+
+  <!-- Step 2: Perception -->
+  <rect x="210" y="55" width="150" height="100" rx="12" fill="url(#p2)" filter="url(#s2)"/>
+  <text x="285" y="80" text-anchor="middle" fill="#fff" font-size="24">👁️</text>
+  <text x="285" y="102" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Perception</text>
+  <text x="285" y="118" text-anchor="middle" fill="#e2e8f0" font-size="9">Sensor Fusion</text>
+  <text x="285" y="132" text-anchor="middle" fill="#e2e8f0" font-size="9">Occupancy Detection</text>
+  <text x="285" y="146" text-anchor="middle" fill="#e2e8f0" font-size="9">Anomaly Detection</text>
+
+  <!-- Arrow -->
+  <line x1="360" y1="105" x2="390" y2="105" stroke="#a78bfa" stroke-width="2.5"/>
+  <polygon points="388,100 398,105 388,110" fill="#a78bfa"/>
+
+  <!-- Step 3: Prediction -->
+  <rect x="400" y="55" width="150" height="100" rx="12" fill="url(#p3)" filter="url(#s2)"/>
+  <text x="475" y="80" text-anchor="middle" fill="#fff" font-size="24">📈</text>
+  <text x="475" y="102" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Prediction</text>
+  <text x="475" y="118" text-anchor="middle" fill="#e2e8f0" font-size="9">Holt-Winters Forecast</text>
+  <text x="475" y="132" text-anchor="middle" fill="#e2e8f0" font-size="9">Humidex Calculation</text>
+  <text x="475" y="146" text-anchor="middle" fill="#e2e8f0" font-size="9">Comfort Classification</text>
+
+  <!-- Arrow -->
+  <line x1="550" y1="105" x2="580" y2="105" stroke="#a78bfa" stroke-width="2.5"/>
+  <polygon points="578,100 588,105 578,110" fill="#a78bfa"/>
+
+  <!-- Step 4: Decision -->
+  <rect x="590" y="55" width="150" height="100" rx="12" fill="url(#p4)" filter="url(#s2)"/>
+  <text x="665" y="80" text-anchor="middle" fill="#fff" font-size="24">⚡</text>
+  <text x="665" y="102" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Decision</text>
+  <text x="665" y="118" text-anchor="middle" fill="#e2e8f0" font-size="9">Target Temperature</text>
+  <text x="665" y="132" text-anchor="middle" fill="#e2e8f0" font-size="9">Trend Compensation</text>
+  <text x="665" y="146" text-anchor="middle" fill="#e2e8f0" font-size="9">Energy Optimization</text>
+
+  <!-- Arrow down -->
+  <line x1="665" y1="155" x2="665" y2="185" stroke="#a78bfa" stroke-width="2.5"/>
+  <polygon points="660,183 665,193 670,183" fill="#a78bfa"/>
+
+  <!-- Step 5: Verification -->
+  <rect x="590" y="195" width="250" height="80" rx="12" fill="url(#p5)" filter="url(#s2)"/>
+  <text x="715" y="222" text-anchor="middle" fill="#fff" font-size="24">✅</text>
+  <text x="715" y="244" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Verification</text>
+  <text x="715" y="260" text-anchor="middle" fill="#e2e8f0" font-size="9">Safety Check | Conflict Detect | Logic Validate</text>
+
+  <!-- Pass Arrow -->
+  <rect x="610" y="285" width="80" height="24" rx="6" fill="#22c55e"/>
+  <text x="650" y="301" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">✓ PASS</text>
+  <line x1="650" y1="275" x2="650" y2="285" stroke="#22c55e" stroke-width="2"/>
+
+  <!-- Execute -->
+  <rect x="610" y="312" width="80" height="20" rx="4" fill="#1e3a5f" stroke="#41BDF5" stroke-width="1"/>
+  <text x="650" y="326" text-anchor="middle" fill="#41BDF5" font-size="9" font-weight="600">🔌 Execute</text>
+
+  <!-- Fail Arrow back to Supervisor -->
+  <path d="M 590 235 L 420 235 L 420 290 L 95 290 L 95 155" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="6,3"/>
+  <polygon points="90,158 95,148 100,158" fill="#ef4444"/>
+
+  <!-- Fail Label -->
+  <rect x="700" y="285" width="130" height="24" rx="6" fill="#ef4444"/>
+  <text x="765" y="301" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">✗ FAIL → Re-plan</text>
+  <line x1="765" y1="275" x2="765" y2="285" stroke="#ef4444" stroke-width="2"/>
+
+  <!-- Re-plan Label -->
+  <rect x="180" y="280" width="200" height="20" rx="4" fill="#451a1a" stroke="#ef4444" stroke-width="0.5"/>
+  <text x="280" y="294" text-anchor="middle" fill="#fca5a5" font-size="9">🔄 Supervisor re-plans (max 3 retries)</text>
+
+  <!-- Info boxes at bottom -->
+  <rect x="20" y="195" width="240" height="50" rx="8" fill="#1a1a3e" stroke="#6366f1" stroke-width="0.5"/>
+  <text x="140" y="215" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="600">📊 Every step produces</text>
+  <text x="140" y="232" text-anchor="middle" fill="#94a3b8" font-size="9">Reasoning Chain + Confidence Score + Data</text>
+
+  <rect x="20" y="255" width="240" height="50" rx="8" fill="#1a1a3e" stroke="#6366f1" stroke-width="0.5"/>
+  <text x="140" y="275" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="600">⏱️ Pipeline Performance</text>
+  <text x="140" y="292" text-anchor="middle" fill="#94a3b8" font-size="9">~450ms end-to-end | Real-time streaming</text>
+</svg>

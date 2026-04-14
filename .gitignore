@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment variables (contain secrets)
+.env
+agent_engine/.env
+
+# Database
+agent_engine/data/
+*.db
+*.db-wal
+*.db-shm
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Docker
+.dockerignore
+
+# Logs
+*.log
+logs/
+
+# Byte-compiled
+*.pyc
+
+# Distribution
+*.tar.gz
+*.whl

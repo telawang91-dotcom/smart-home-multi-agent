@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" font-family="system-ui,-apple-system,sans-serif">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#667eea"/><stop offset="100%" stop-color="#764ba2"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f093fb"/><stop offset="100%" stop-color="#f5576c"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4facfe"/><stop offset="100%" stop-color="#00f2fe"/></linearGradient>
+    <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#43e97b"/><stop offset="100%" stop-color="#38f9d7"/></linearGradient>
+    <linearGradient id="g5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fa709a"/><stop offset="100%" stop-color="#fee140"/></linearGradient>
+    <linearGradient id="gbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f0c29"/><stop offset="50%" stop-color="#1a1a3e"/><stop offset="100%" stop-color="#24243e"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/></filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="620" rx="16" fill="url(#gbg)"/>
+
+  <!-- Title -->
+  <text x="450" y="40" text-anchor="middle" fill="#fff" font-size="20" font-weight="700" filter="url(#glow)">🏠 Smart Home Multi-Agent Architecture</text>
+
+  <!-- Frontend Layer -->
+  <rect x="180" y="60" width="540" height="50" rx="12" fill="url(#g3)" opacity="0.9" filter="url(#shadow)"/>
+  <text x="450" y="90" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">🖥️ Frontend (gai.html) — Sensor Panel / Floor Plan / Agent Flow / Decision History</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="110" x2="450" y2="135" stroke="#4facfe" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <text x="500" y="128" fill="#aaa" font-size="10">HTTP / WebSocket</text>
+
+  <!-- Node.js Gateway -->
+  <rect x="250" y="135" width="400" height="40" rx="10" fill="#2d2d5e" stroke="#4facfe" stroke-width="1" filter="url(#shadow)"/>
+  <text x="450" y="160" text-anchor="middle" fill="#4facfe" font-size="13" font-weight="600">⚡ Node.js Gateway (sync-server.js)</text>
+
+  <!-- Arrow -->
+  <line x1="450" y1="175" x2="450" y2="200" stroke="#f093fb" stroke-width="2"/>
+  <text x="500" y="193" fill="#aaa" font-size="10">HTTP / SSE</text>
+
+  <!-- Agent Engine Box -->
+  <rect x="40" y="200" width="820" height="310" rx="14" fill="#1e1e3f" stroke="#764ba2" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="450" y="225" text-anchor="middle" fill="#c084fc" font-size="15" font-weight="700">🧠 Python Agent Engine v3.0 (FastAPI + LangGraph)</text>
+
+  <!-- Supervisor -->
+  <rect x="70" y="240" width="160" height="55" rx="10" fill="url(#g1)" filter="url(#shadow)"/>
+  <text x="150" y="264" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">🧠 Supervisor</text>
+  <text x="150" y="282" text-anchor="middle" fill="#ddd" font-size="9">Orchestrate + Re-plan</text>
+
+  <!-- Arrow to Perception -->
+  <line x1="230" y1="267" x2="260" y2="267" stroke="#a78bfa" stroke-width="2"/>
+
+  <!-- Perception -->
+  <rect x="260" y="240" width="140" height="55" rx="10" fill="url(#g3)" filter="url(#shadow)"/>
+  <text x="330" y="264" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">👁️ Perception</text>
+  <text x="330" y="282" text-anchor="middle" fill="#ddd" font-size="9">Sensor Fusion</text>
+
+  <!-- Arrow -->
+  <line x1="400" y1="267" x2="430" y2="267" stroke="#a78bfa" stroke-width="2"/>
+
+  <!-- Prediction -->
+  <rect x="430" y="240" width="140" height="55" rx="10" fill="url(#g4)" filter="url(#shadow)"/>
+  <text x="500" y="264" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">📈 Prediction</text>
+  <text x="500" y="282" text-anchor="middle" fill="#ddd" font-size="9">Holt-Winters + Newton</text>
+
+  <!-- Arrow -->
+  <line x1="570" y1="267" x2="600" y2="267" stroke="#a78bfa" stroke-width="2"/>
+
+  <!-- Decision -->
+  <rect x="600" y="240" width="140" height="55" rx="10" fill="url(#g5)" filter="url(#shadow)"/>
+  <text x="670" y="264" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">⚡ Decision</text>
+  <text x="670" y="282" text-anchor="middle" fill="#ddd" font-size="9">Comfort-based Control</text>
+
+  <!-- Arrow down to Verification -->
+  <line x1="670" y1="295" x2="670" y2="315" stroke="#a78bfa" stroke-width="2"/>
+
+  <!-- Verification -->
+  <rect x="530" y="315" width="220" height="55" rx="10" fill="url(#g2)" filter="url(#shadow)"/>
+  <text x="640" y="339" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">✅ Verification</text>
+  <text x="640" y="357" text-anchor="middle" fill="#ddd" font-size="9">Safety Check + Conflict Detect</text>
+
+  <!-- Retry Arrow back to Supervisor -->
+  <path d="M 530 345 L 150 345 L 150 295" fill="none" stroke="#f87171" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="340" y="340" text-anchor="middle" fill="#f87171" font-size="9">❌ Fail → Re-plan (max 3x)</text>
+
+  <!-- Tools Section -->
+  <rect x="60" y="390" width="360" height="105" rx="10" fill="#252550" stroke="#6366f1" stroke-width="1"/>
+  <text x="240" y="412" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="700">🔧 Backend Services</text>
+  <text x="80" y="432" fill="#94a3b8" font-size="10">📡 ha_bridge.py — HA REST API (real/mock)</text>
+  <text x="80" y="450" fill="#94a3b8" font-size="10">🔌 ha_websocket.py — Real-time Events</text>
+  <text x="80" y="468" fill="#94a3b8" font-size="10">💾 database.py — SQLite + Preference Learning</text>
+  <text x="80" y="486" fill="#94a3b8" font-size="10">⏰ scheduler.py — Auto Collect → Analyze → Control</text>
+
+  <!-- Models Section -->
+  <rect x="440" y="390" width="400" height="105" rx="10" fill="#252550" stroke="#6366f1" stroke-width="1"/>
+  <text x="640" y="412" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="700">📐 Scientific Models</text>
+  <text x="460" y="432" fill="#94a3b8" font-size="10">🌡️ Humidex — Masterson &amp; Richardson (1979)</text>
+  <text x="460" y="450" fill="#94a3b8" font-size="10">📊 Holt-Winters — Triple Exponential Smoothing (1960)</text>
+  <text x="460" y="468" fill="#94a3b8" font-size="10">🧊 Newton Cooling — Physical Fallback Model (1701)</text>
+  <text x="460" y="486" fill="#94a3b8" font-size="10">🔔 notification.py — HA / Feishu / DingTalk / WeChat</text>
+
+  <!-- HA Layer -->
+  <rect x="140" y="530" width="620" height="50" rx="12" fill="#1e3a5f" stroke="#41BDF5" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="450" y="555" text-anchor="middle" fill="#41BDF5" font-size="13" font-weight="600">🏠 Home Assistant (Optional)</text>
+  <text x="450" y="572" text-anchor="middle" fill="#7dd3fc" font-size="10">Aqara FP2 | Temp/Humidity | Climate AC | Dehumidifier | Fall Sensor | Alarm</text>
+
+  <!-- Arrow Engine to HA -->
+  <line x1="450" y1="510" x2="450" y2="530" stroke="#41BDF5" stroke-width="2"/>
+  <text x="510" y="524" fill="#aaa" font-size="10">REST API / WebSocket</text>
+
+  <!-- Version Badge -->
+  <rect x="730" y="590" width="150" height="22" rx="6" fill="#6366f1"/>
+  <text x="805" y="605" text-anchor="middle" fill="#fff" font-size="10" font-weight="600">v3.0 | MIT License</text>
+</svg>

@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>虚拟传感器面板 - 手机端</title>
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --sub:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --blue:#0a84ff;
+      --green:#34c759;
+      --orange:#ff9f0a;
+      --red:#ff3b30;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:18px;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:var(--sans);
+      background:var(--bg);
+      color:var(--text);
+      padding:12px;
+      padding-bottom:60px;
+      font-size:14px;
+    }
+    .header{
+      text-align:center;
+      margin-bottom:16px;
+      padding:12px;
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .header h1{font-size:18px;margin-bottom:4px}
+    .header .status{font-size:11px;color:var(--sub)}
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:12px;
+    }
+    .section-title{
+      font-size:14px;
+      font-weight:600;
+      margin-bottom:12px;
+      color:var(--text);
+      border-bottom:1px solid var(--line);
+      padding-bottom:8px;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:16px;
+      padding:8px 0;
+    }
+    .row:last-child{margin-bottom:0}
+    .label{
+      flex:1;
+      min-width:0;
+    }
+    .name{
+      font-size:13px;
+      font-weight:500;
+      margin-bottom:2px;
+    }
+    .hint{
+      font-size:11px;
+      color:var(--sub);
+    }
+    .control{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:120px;
+      justify-content:flex-end;
+    }
+    input[type="range"]{
+      flex:1;
+      min-width:100px;
+      height:6px;
+      border-radius:3px;
+      background:#e0e0e0;
+      outline:none;
+      -webkit-appearance:none;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:var(--blue);
+      cursor:pointer;
+      box-shadow:0 2px 6px rgba(10,132,255,.3);
+    }
+    input[type="range"]::-moz-range-thumb{
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:var(--blue);
+      cursor:pointer;
+      border:none;
+      box-shadow:0 2px 6px rgba(10,132,255,.3);
+    }
+    select{
+      padding:8px 12px;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:var(--card);
+      font-size:13px;
+      min-width:140px;
+      outline:none;
+    }
+    .value{
+      font-size:13px;
+      font-weight:600;
+      color:var(--blue);
+      min-width:60px;
+      text-align:right;
+    }
+    .sync-indicator{
+      position:fixed;
+      bottom:12px;
+      left:50%;
+      transform:translateX(-50%);
+      padding:10px 20px;
+      background:var(--card);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      font-size:11px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      z-index:1000;
+    }
+    .sync-indicator.syncing{color:var(--orange)}
+    .sync-indicator.synced{color:var(--green)}
+    .sync-indicator.error{color:var(--red)}
+    .note{
+      background:rgba(10,132,255,.05);
+      padding:12px;
+      border-radius:8px;
+      font-size:12px;
+      color:var(--sub);
+      line-height:1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📱 虚拟传感器面板</h1>
+    <div class="status" id="syncStatus">连接中...</div>
+  </div>
+
+  <!-- 场景模板 -->
+  <div class="card">
+    <div class="section-title">场景模板</div>
+    <div class="row">
+      <div class="label">
+        <div class="name">场景模板</div>
+        <div class="hint">一键生成更像真实的组合数据</div>
+      </div>
+      <div class="control">
+        <select id="sceneSelect">
+          <option value="scene1">场景1：下午3点·卧室·老人静坐·闷热不适</option>
+          <option value="scene2">场景2：下午4点·卧室·老人静坐·闷热（预测关闭）</option>
+          <option value="scene3">场景3：上午11点·全屋·无人·节能模式</option>
+          <option value="scene4">场景4：下午2点·客厅·老人静坐·略闷热</option>
+          <option value="scene5">场景5：早上8点·卧室·老人睡眠·偏冷</option>
+          <option value="scene6">场景6：傍晚6点·卧室·老人静坐·高温高湿</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 基础设置 -->
+  <div class="card">
+    <div class="section-title">基础设置</div>
+    <div class="row">
+      <div class="label">
+        <div class="name">模拟时间（小时）</div>
+        <div class="hint">偏好学习会按小时统计</div>
+      </div>
+      <div class="control">
+        <input type="range" id="hour" min="0" max="23" step="1" value="21">
+        <div class="value" id="hourV">21:00</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <div class="name">全屋相对湿度</div>
+        <div class="hint">用于体感（Humidex）</div>
+      </div>
+      <div class="control">
+        <input type="range" id="rh" min="20" max="90" step="1" value="55">
+        <div class="value" id="rhV">55%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 温度设置 -->
+  <div class="card">
+    <div class="section-title">温度设置</div>
+    <div class="row">
+      <div class="label">
+        <div class="name">卧室温度</div>
+        <div class="hint">°C</div>
+      </div>
+      <div class="control">
+        <input type="range" id="t_bed" min="18" max="30" step="0.1" value="25.0">
+        <div class="value" id="t_bedV">25.0°C</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <div class="name">客厅温度</div>
+        <div class="hint">°C</div>
+      </div>
+      <div class="control">
+        <input type="range" id="t_liv" min="18" max="30" step="0.1" value="24.5">
+        <div class="value" id="t_livV">24.5°C</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <div class="name">卫生间温度</div>
+        <div class="hint">°C（洗澡场景会升高）</div>
+      </div>
+      <div class="control">
+        <input type="range" id="t_bath" min="20" max="40" step="0.1" value="28.0">
+        <div class="value" id="t_bathV">28.0°C</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 传感器设置 -->
+  <div class="card">
+    <div class="section-title">传感器设置</div>
+    <div class="row">
+      <div class="label">
+        <div class="name">毫米波（卧室）</div>
+        <div class="hint">presence / micro-motion / breathing</div>
+      </div>
+      <div class="control">
+        <select id="radarBed">
+          <option value="idle">无人</option>
+          <option value="sleep" selected>睡眠（微动+呼吸）</option>
+          <option value="sit">静坐（轻微动作）</option>
+          <option value="walk">走动（明显动作）</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <div class="name">毫米波（客厅）</div>
+        <div class="hint">presence / micro-motion / breathing</div>
+      </div>
+      <div class="control">
+        <select id="radarLiv">
+          <option value="idle" selected>无人</option>
+          <option value="sleep">睡眠</option>
+          <option value="sit">静坐</option>
+          <option value="walk">走动</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <div class="name">毫米波（卫生间）</div>
+        <div class="hint">presence / micro-motion / breathing</div>
+      </div>
+      <div class="control">
+        <select id="radarBath">
+          <option value="idle" selected>无人</option>
+          <option value="sleep">睡眠</option>
+          <option value="sit">静坐</option>
+          <option value="walk">走动</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <div class="name">PIR 大动作（客厅）</div>
+        <div class="hint">红外补充（对静止不敏感）</div>
+      </div>
+      <div class="control">
+        <input type="range" id="pirLiv" min="0" max="1" step="1" value="0">
+        <div class="value" id="pirLivV">0</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <div class="name">门磁（卧室门）</div>
+        <div class="hint">开/关（用于推断与通风策略）</div>
+      </div>
+      <div class="control">
+        <select id="doorBed">
+          <option value="0" selected>关闭</option>
+          <option value="1">打开</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <div class="name">跌倒风险（卫生间）</div>
+        <div class="hint">0~1（高风险触发安全优先）</div>
+      </div>
+      <div class="control">
+        <input type="range" id="fall" min="0" max="1" step="0.01" value="0.12">
+        <div class="value" id="fallV">0.12</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手动覆盖 -->
+  <div class="card">
+    <div class="section-title">手动覆盖</div>
+    <div class="row">
+      <div class="label">
+        <div class="name">手动覆盖（设定温度）</div>
+        <div class="hint">开启后系统只解释不自动改</div>
+      </div>
+      <div class="control">
+        <select id="overrideOn">
+          <option value="0" selected>关闭</option>
+          <option value="1">开启</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <div class="name">覆盖温度</div>
+        <div class="hint">°C（仅覆盖开启时生效）</div>
+      </div>
+      <div class="control">
+        <input type="range" id="overrideTemp" min="20" max="28" step="0.1" value="25.5">
+        <div class="value" id="overrideTempV">25.5°C</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sync-indicator" id="syncIndicator">
+    <span>🔄</span>
+    <span>同步中...</span>
+  </div>
+
+  <script>
+    // 控制状态
+    const controlState = {
+      sceneSelect: 'scene1',
+      hour: 21,
+      rh: 55,
+      t_bed: 25.0,
+      t_liv: 24.5,
+      t_bath: 28.0,
+      radarBed: 'sleep',
+      radarLiv: 'idle',
+      radarBath: 'idle',
+      pirLiv: 0,
+      doorBed: '0',
+      fall: 0.12,
+      overrideOn: '0',
+      overrideTemp: 25.5,
+      lastUpdate: Date.now()
+    };
+
+    // WebSocket连接
+    let ws = null;
+    let wsReconnectTimer = null;
+    
+    // 获取服务器地址
+    function getServerURL(){
+      const urlParams = new URLSearchParams(window.location.search);
+      const serverIP = urlParams.get('server') || window.location.hostname || 'localhost';
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${protocol}//${serverIP}:8080`;
+    }
+
+    // 连接WebSocket
+    function connectWebSocket(){
+      const wsURL = getServerURL();
+      console.log('连接WebSocket:', wsURL);
+      
+      try{
+        ws = new WebSocket(wsURL);
+        
+        ws.onopen = () => {
+          console.log('WebSocket连接成功');
+          updateSyncStatus('已连接', 'synced');
+        };
+        
+        ws.onmessage = (event) => {
+          try{
+            const data = JSON.parse(event.data);
+            if(data.type === 'ack'){
+              updateSyncStatus('已同步', 'synced');
+            }
+          }catch(e){
+            console.error('解析消息错误:', e);
+          }
+        };
+        
+        ws.onerror = (error) => {
+          console.error('WebSocket错误:', error);
+          updateSyncStatus('连接错误', 'error');
+        };
+        
+        ws.onclose = () => {
+          console.log('WebSocket连接关闭');
+          updateSyncStatus('连接断开，重连中...', 'syncing');
+          if(wsReconnectTimer) clearTimeout(wsReconnectTimer);
+          wsReconnectTimer = setTimeout(connectWebSocket, 3000);
+        };
+      }catch(e){
+        console.error('WebSocket连接失败:', e);
+        updateSyncStatus('连接失败', 'error');
+        if(wsReconnectTimer) clearTimeout(wsReconnectTimer);
+        wsReconnectTimer = setTimeout(connectWebSocket, 3000);
+      }
+    }
+
+    // 发送状态更新
+    function sendStateUpdate(){
+      if(ws && ws.readyState === WebSocket.OPEN){
+        ws.send(JSON.stringify({
+          type: 'update',
+          data: controlState
+        }));
+        updateSyncStatus('同步中...', 'syncing');
+      }
+    }
+
+    // 更新显示值
+    function updateValueDisplay(id, value, suffix = ''){
+      const el = document.getElementById(id + 'V');
+      if(el){
+        if(id === 'hour'){
+          el.textContent = `${value.toString().padStart(2, '0')}:00`;
+        } else if(id === 'rh'){
+          el.textContent = `${value}%`;
+        } else if(id === 't_bed' || id === 't_liv' || id === 't_bath' || id === 'overrideTemp'){
+          el.textContent = `${parseFloat(value).toFixed(1)}°C`;
+        } else if(id === 'fall'){
+          el.textContent = parseFloat(value).toFixed(2);
+        } else {
+          el.textContent = value + suffix;
+        }
+      }
+    }
+
+    // 绑定事件
+    function bindEvents(){
+      // 场景选择
+      const sceneSelect = document.getElementById('sceneSelect');
+      if(sceneSelect){
+        sceneSelect.addEventListener('change', (e) => {
+          controlState.sceneSelect = e.target.value;
+          sendStateUpdate();
+        });
+      }
+
+      // 所有range输入
+      ['hour', 'rh', 't_bed', 't_liv', 't_bath', 'pirLiv', 'fall', 'overrideTemp'].forEach(id => {
+        const input = document.getElementById(id);
+        if(input){
+          input.addEventListener('input', (e) => {
+            const value = id === 'hour' || id === 'rh' || id === 'pirLiv' ? 
+                         parseInt(e.target.value) : parseFloat(e.target.value);
+            controlState[id] = value;
+            updateValueDisplay(id, value);
+            sendStateUpdate();
+          });
+        }
+      });
+
+      // 所有select
+      ['radarBed', 'radarLiv', 'radarBath', 'doorBed', 'overrideOn'].forEach(id => {
+        const select = document.getElementById(id);
+        if(select){
+          select.addEventListener('change', (e) => {
+            controlState[id] = e.target.value;
+            sendStateUpdate();
+          });
+        }
+      });
+    }
+
+    // 初始化显示
+    function initDisplay(){
+      // 设置所有输入的值
+      Object.keys(controlState).forEach(key => {
+        const el = document.getElementById(key);
+        if(el){
+          if(el.type === 'range' || el.tagName === 'SELECT'){
+            el.value = controlState[key];
+            updateValueDisplay(key, controlState[key]);
+          }
+        }
+      });
+    }
+
+    // 同步状态
+    function updateSyncStatus(text, status = 'syncing'){
+      const indicator = document.getElementById('syncIndicator');
+      const statusEl = document.getElementById('syncStatus');
+      
+      if(indicator){
+        indicator.className = `sync-indicator ${status}`;
+        indicator.innerHTML = `<span>${status === 'syncing' ? '🔄' : status === 'synced' ? '✅' : '❌'}</span><span>${text}</span>`;
+      }
+      
+      if(statusEl){
+        statusEl.textContent = text;
+      }
+    }
+
+    // 初始化
+    function init(){
+      initDisplay();
+      bindEvents();
+      connectWebSocket();
+    }
+
+    init();
+  </script>
+</body>
+</html>

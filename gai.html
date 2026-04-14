@@ -1,0 +1,5034 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>全屋智能舒适与安全系统（递进式AI分析·真实算法演示）</title>
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --sub:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --blue:#0a84ff;
+      --green:#34c759;
+      --orange:#ff9f0a;
+      --red:#ff3b30;
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 600px at 30% -10%, rgba(10,132,255,.12), transparent 55%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(52,199,89,.10), transparent 50%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .app{max-width:1400px;margin:18px auto 28px;padding:0 14px;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap;}
+    .brand{display:flex;gap:12px;align-items:center;}
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background: linear-gradient(135deg, rgba(10,132,255,.95), rgba(52,199,89,.85));
+      box-shadow: 0 10px 18px rgba(10,132,255,.22);
+    }
+    .title h1{font-size:16px;margin:0;letter-spacing:.2px}
+    .title .sub{font-size:12px;color:var(--sub);margin-top:2px}
+    .top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .pill{
+      display:flex;align-items:center;gap:8px;
+      padding:10px 12px;border-radius:999px;
+      background: rgba(255,255,255,.65);
+      border:1px solid var(--line);
+      box-shadow: 0 8px 20px rgba(0,0,0,.04);
+      backdrop-filter: blur(12px);
+    }
+    .btn{
+      cursor:pointer;border:1px solid var(--line);
+      background: rgba(255,255,255,.9);
+      color:var(--text);
+      padding:10px 12px;border-radius:999px;
+      font-weight:700;font-size:12.5px;
+      box-shadow:0 6px 16px rgba(0,0,0,.05);
+      transition:.15s transform ease,.15s box-shadow ease;
+      user-select:none;
+    }
+    .btn:hover{transform:translateY(-1px);box-shadow:0 10px 18px rgba(0,0,0,.07)}
+    .btn.primary{border-color:rgba(10,132,255,.25);background:rgba(10,132,255,.12)}
+    .btn.danger{border-color:rgba(255,59,48,.25);background:rgba(255,59,48,.10)}
+    .toggle{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--sub)}
+    .switch{
+      width:44px;height:26px;border-radius:999px;position:relative;
+      background:rgba(0,0,0,.12);border:1px solid var(--line);cursor:pointer;
+    }
+    .switch::after{
+      content:"";width:22px;height:22px;border-radius:999px;
+      position:absolute;top:1px;left:1px;background:#fff;
+      box-shadow:0 6px 14px rgba(0,0,0,.12);transition:.18s ease;
+    }
+    .switch.on{background:rgba(52,199,89,.45)}
+    .switch.on::after{left:21px}
+
+    .grid{display:grid;grid-template-columns:360px 1fr 450px;gap:12px;align-items:start;transition:grid-template-columns 0.3s cubic-bezier(0.4,0,0.2,1);}
+    .grid.left-collapsed{grid-template-columns:0px 1fr 450px;}
+    #leftPanel{
+      transition:opacity 0.3s ease, transform 0.3s ease, max-width 0.3s ease;
+    }
+    .grid.left-collapsed #leftPanel{
+      opacity:0 !important;
+      pointer-events:none !important;
+      max-width:0 !important;
+      overflow:hidden !important;
+      transform:translateX(-100%) !important;
+    }
+    @media (max-width: 1200px){.grid{grid-template-columns:1fr}}
+    @media (max-width: 1200px){.grid.left-collapsed{grid-template-columns:1fr}}
+    
+    /* 左侧面板收起按钮 */
+    .left-collapse-btn{
+      position:fixed;left:360px;top:50%;transform:translateY(-50%);
+      width:28px;height:80px;background:rgba(255,255,255,.95);
+      border:1px solid var(--line);border-left:none;
+      border-radius:0 12px 12px 0;cursor:pointer;
+      display:none; /* 默认隐藏 */
+      align-items:center;justify-content:center;
+      font-size:16px;color:var(--text);z-index:1000;
+      transition:left 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+      box-shadow:2px 0 12px rgba(0,0,0,.15);
+      user-select:none;
+      margin:0;padding:0;
+      opacity:0;
+      pointer-events:none;
+    }
+    /* 当grid存在时显示按钮 */
+    #mainGrid:not(.left-collapsed) .left-collapse-btn{
+      display:flex;
+      opacity:1;
+      pointer-events:auto;
+    }
+    /* 收起状态下，按钮移到左侧并显示 */
+    #mainGrid.left-collapsed .left-collapse-btn{
+      left:0 !important;
+      display:flex !important;
+      opacity:1 !important;
+      pointer-events:auto !important;
+    }
+    .left-collapse-btn:hover{
+      background:rgba(255,255,255,1);
+      width:32px;
+      box-shadow:2px 0 16px rgba(0,0,0,.2);
+    }
+    @media (max-width: 1200px){
+      .left-collapse-btn{display:none !important;opacity:0 !important;pointer-events:none !important;}
+    }
+
+    .card{
+      background:rgba(255,255,255,.78);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 16px;border-bottom:1px solid var(--line);
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    }
+    .card .hd .h{font-size:13.5px;font-weight:850;letter-spacing:.2px;margin:0}
+    .card .hd .d{font-size:12px;color:var(--sub);margin-top:3px}
+    .card .bd{padding:14px 16px}
+    .section{padding:12px 0;border-top:1px solid rgba(0,0,0,.06)}
+    .section:first-child{border-top:none;padding-top:0}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0}
+    .label .name{font-size:12.5px;font-weight:750}
+    .label .hint{font-size:11.5px;color:var(--sub);margin-top:2px}
+    .control{display:flex;align-items:center;gap:10px;min-width:180px;justify-content:flex-end}
+    input[type="range"]{width:220px}
+    .value{min-width:68px;text-align:right;font-variant-numeric:tabular-nums;font-weight:850;font-size:12.5px}
+    select{
+      width:220px;padding:10px 12px;border-radius:12px;
+      border:1px solid var(--line);background:rgba(255,255,255,.9);
+      outline:none;font-weight:750;font-size:12.5px;
+    }
+    .note{font-size:12px;color:var(--sub)}
+    .floor-wrap{padding:14px 16px 16px}
+    .floor-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{
+      padding:8px 10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.85);font-size:12px;font-weight:850;
+      cursor:pointer;user-select:none;
+    }
+    .chip.active{border-color:rgba(10,132,255,.35);background:rgba(10,132,255,.12)}
+    .plan{
+      position:relative;height:360px;border-radius:22px;border:1px solid rgba(0,0,0,.06);
+      background:
+        radial-gradient(900px 400px at 50% 0%, rgba(10,132,255,.08), transparent 60%),
+        radial-gradient(900px 400px at 50% 120%, rgba(52,199,89,.08), transparent 60%),
+        rgba(255,255,255,.72);
+      overflow:hidden;
+    }
+    .room{
+      position:absolute;border-radius:22px;border:1px solid rgba(0,0,0,.06);
+      box-shadow:0 8px 18px rgba(0,0,0,.06);overflow:hidden;
+      cursor:pointer;transition:.15s transform ease, .15s outline ease, opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .room.hidden{
+      opacity:0;visibility:hidden;pointer-events:none;
+      outline: 0 solid rgba(10,132,255,.0);
+    }
+    .room:hover{transform:translateY(-1px)}
+    .room.highlight{
+      outline: 3px solid rgba(10,132,255,.35);
+      box-shadow:0 14px 26px rgba(10,132,255,.16);
+    }
+    .room .inner{height:100%;padding:14px;display:flex;flex-direction:column;justify-content:space-between}
+    .room .rname{font-weight:900;font-size:14px;letter-spacing:.2px}
+    .room .meta{display:flex;align-items:center;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.75);
+      font-size:11.5px;font-weight:900;
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,.22);box-shadow:0 0 0 6px rgba(0,0,0,.03)}
+    .dot.green{background:var(--green);box-shadow:0 0 0 8px rgba(52,199,89,.14)}
+    .dot.orange{background:var(--orange);box-shadow:0 0 0 8px rgba(255,159,10,.14)}
+    .dot.red{background:var(--red);box-shadow:0 0 0 8px rgba(255,59,48,.14)}
+    .thermo{font-size:20px;font-weight:950}
+    .subline{font-size:12px;color:var(--sub);font-weight:700}
+    .person{
+      position:absolute;width:34px;height:34px;border-radius:999px;
+      border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.86);
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 12px 24px rgba(0,0,0,.12);transition:.25s ease;
+    }
+    .glow{
+      position:absolute;inset:-40px;pointer-events:none;
+      background: radial-gradient(280px 200px at var(--gx,30%) var(--gy,30%), rgba(10,132,255,.18), transparent 60%);
+      transition:.2s ease;
+    }
+
+    /* Agent Flow Panel */
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes agentPulse{0%,100%{box-shadow:0 0 0 0 rgba(10,132,255,.3)}50%{box-shadow:0 0 0 8px rgba(10,132,255,0)}}
+    .agent-node div[id^="agentIcon_"]{transition:all 0.35s cubic-bezier(.4,0,.2,1)}
+    #agentThoughts::-webkit-scrollbar{width:4px}
+    #agentThoughts::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:4px}
+    #agentStatusDot{width:8px;height:8px;border-radius:50%;background:var(--sub);display:inline-block;transition:background 0.3s}
+
+    /* Right decision panel */
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{
+      padding:8px 10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.8);font-size:12px;font-weight:900;cursor:pointer;
+    }
+    .tab.active{border-color:rgba(10,132,255,.35);background:rgba(10,132,255,.12)}
+    .timeline{
+      margin-top:12px;
+      display:flex;gap:8px;flex-wrap:wrap;
+      padding:10px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:16px;
+      background:rgba(255,255,255,.72);
+    }
+    .step{
+      flex:1;
+      min-width:110px;
+      padding:10px 10px;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,.06);
+      background:rgba(255,255,255,.82);
+      cursor:pointer;
+      transition:.15s ease;
+    }
+    .step:hover{transform:translateY(-1px)}
+    .step.active{
+      border-color:rgba(10,132,255,.35);
+      background:rgba(10,132,255,.10);
+      box-shadow:0 10px 18px rgba(10,132,255,.12);
+    }
+    .step .s1{font-size:11px;color:var(--sub);font-weight:900}
+    .step .s2{margin-top:4px;font-size:12.5px;font-weight:950}
+    .step .s3{margin-top:4px;font-size:11.5px;color:var(--sub);font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cards{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+    .ai-card{
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:16px;
+      background:rgba(255,255,255,.72);
+      padding:12px;
+      overflow:hidden;
+    }
+    .ai-card.hide{display:none}
+    .ai-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .ai-title{font-weight:950;font-size:12.8px}
+    .ai-sub{margin-top:4px;font-size:11.8px;color:var(--sub);font-weight:750}
+    .bubble{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background: linear-gradient(135deg, rgba(10,132,255,.10), rgba(52,199,89,.08));
+      border:1px solid rgba(10,132,255,.16);
+      font-size:12.2px;
+      font-weight:750;
+      line-height:1.45;
+    }
+    .kpi-grid{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mini{
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;background:rgba(255,255,255,.78);
+      padding:10px;
+    }
+    .mini .t{font-size:11px;color:var(--sub);font-weight:850}
+    .mini .v{font-size:18px;font-weight:950;margin-top:6px;font-variant-numeric:tabular-nums}
+    .mini .s{font-size:11.5px;color:var(--sub);margin-top:4px}
+    .bar{margin-top:8px;height:10px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden;border:1px solid rgba(0,0,0,.04)}
+    .bar>div{height:100%;width:0%;background:linear-gradient(90deg, rgba(10,132,255,.9), rgba(52,199,89,.85));border-radius:999px;transition:.25s ease}
+    .list{
+      margin-top:10px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;
+      background:rgba(255,255,255,.78);
+      overflow:hidden;
+    }
+    .li{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:10px 10px;
+      border-top:1px solid rgba(0,0,0,.06);
+      cursor:pointer;
+    }
+    .li:first-child{border-top:none}
+    .li:hover{background:rgba(10,132,255,.05)}
+    .li .l1{font-size:12px;font-weight:850}
+    .li .l2{font-size:11.3px;color:var(--sub);margin-top:2px;font-weight:700}
+    .li .right{min-width:120px;text-align:right;font-variant-numeric:tabular-nums;font-weight:950}
+    .spark{
+      margin-top:10px;
+      padding:10px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;
+      background:rgba(255,255,255,.78);
+    }
+    .spark .cap{font-size:11.5px;color:var(--sub);font-weight:850;margin-bottom:8px}
+    .spark svg{width:100%;height:56px;display:block}
+    details{
+      margin-top:10px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:14px;background:rgba(255,255,255,.78);
+      padding:10px;
+    }
+    summary{
+      cursor:pointer;font-weight:950;font-size:12.2px;list-style:none;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    summary::-webkit-details-marker{display:none}
+    .code{
+      margin-top:10px;
+      font-family:var(--mono);
+      font-size:11.4px;
+      white-space:pre-wrap;
+      line-height:1.45;
+      color:rgba(29,29,31,.92);
+    }
+    .compare{
+      margin-top:10px;
+      display:grid;grid-template-columns:1fr 1fr;gap:10px;
+    }
+    .tag{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(0,0,0,.06);
+      background:rgba(255,255,255,.82);
+      font-size:11.5px;font-weight:900;color:var(--sub);
+    }
+    .ok{color:var(--green)}
+    .warn{color:var(--orange)}
+    .bad{color:var(--red)}
+
+    .log{
+      max-height:230px;overflow:auto;font-family:var(--mono);
+      font-size:11.3px;line-height:1.45;color:rgba(29,29,31,.9);
+      background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.06);
+      border-radius:16px;padding:10px 12px;
+    }
+    .log .l{padding:6px 0;border-top:1px dashed rgba(0,0,0,.08)}
+    .log .l:first-child{border-top:none}
+    .muted{color:var(--sub)}
+    .tiny{font-size:11.5px;color:var(--sub)}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:1200px){.split{grid-template-columns:1fr}}
+
+    input[type="range"]{
+      -webkit-appearance:none;height:4px;border-radius:999px;background:rgba(10,132,255,.22);outline:none;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;width:18px;height:18px;border-radius:999px;
+      background:#fff;border:1px solid rgba(0,0,0,.10);box-shadow:0 8px 14px rgba(0,0,0,.14);
+    }
+
+    /* ========== 新增：卡通形象与状态显示 ========== */
+    .avatar-section{
+      margin-top:14px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:18px;
+      background:rgba(255,255,255,.75);
+      padding:14px;
+    }
+    .avatar-header{
+      display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;
+    }
+    .avatar-title{font-size:12.5px;font-weight:900;color:var(--text)}
+    .avatar-container{
+      display:flex;align-items:center;gap:16px;
+    }
+    .avatar-svg{
+      width:100px;height:100px;
+      transition:all 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+    .avatar-info{
+      flex:1;
+    }
+    .avatar-status{
+      font-size:22px;font-weight:950;
+      margin-bottom:4px;
+      transition:color 0.3s ease;
+    }
+    .avatar-desc{
+      font-size:12px;color:var(--sub);font-weight:700;
+    }
+    .avatar-hint{
+      margin-top:8px;
+      font-size:11px;color:var(--sub);
+      padding:8px 10px;
+      background:rgba(10,132,255,.06);
+      border-radius:10px;
+    }
+
+    /* 状态颜色 */
+    .status-comfortable .avatar-status{color:var(--green)}
+    .status-warm .avatar-status{color:var(--orange)}
+    .status-hot .avatar-status{color:var(--red)}
+    .status-cold .avatar-status{color:var(--blue)}
+
+    /* ========== 新增：侧边栏帮助面板 ========== */
+    .help-panel{
+      position:fixed;right:20px;top:80px;width:320px;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:18px;
+      box-shadow:0 12px 40px rgba(0,0,0,.12);
+      backdrop-filter:blur(20px);
+      z-index:1000;
+      overflow:hidden;
+      transition:transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+    }
+    .help-panel.collapsed{
+      transform:translateX(calc(100% + 20px));
+      opacity:0;
+      pointer-events:none;
+    }
+    .help-toggle{
+      position:fixed;right:20px;top:20px;
+      width:42px;height:42px;
+      border-radius:12px;
+      background:rgba(255,255,255,.9);
+      border:1px solid rgba(0,0,0,.08);
+      box-shadow:0 8px 20px rgba(0,0,0,.10);
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      font-size:20px;
+      z-index:1001;
+      transition:all 0.2s ease;
+    }
+    .help-toggle:hover{
+      transform:scale(1.05);
+      background:rgba(10,132,255,.1);
+    }
+    .help-header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px;
+      border-bottom:1px solid rgba(0,0,0,.06);
+      background:rgba(10,132,255,.05);
+    }
+    .help-header h3{margin:0;font-size:13.5px;font-weight:900}
+    .help-close{
+      width:28px;height:28px;
+      border-radius:8px;
+      border:none;background:rgba(0,0,0,.05);
+      cursor:pointer;
+      font-size:16px;
+      display:flex;align-items:center;justify-content:center;
+      transition:background 0.2s;
+    }
+    .help-close:hover{background:rgba(0,0,0,.1)}
+    .help-content{
+      max-height:calc(100vh - 200px);overflow-y:auto;
+      padding:14px 16px;
+    }
+    .help-section{margin-bottom:16px}
+    .help-section:last-child{margin-bottom:0}
+    .help-section-title{
+      font-size:12px;font-weight:900;color:var(--sub);
+      margin-bottom:8px;display:flex;align-items:center;gap:6px;
+    }
+    .help-text{
+      font-size:12px;line-height:1.6;color:var(--text);
+    }
+    .help-list{
+      margin:0;padding-left:16px;
+      font-size:12px;line-height:1.7;
+    }
+    .help-list li{margin-bottom:4px}
+    .glossary-item{
+      padding:8px 10px;
+      background:rgba(0,0,0,.02);
+      border-radius:10px;
+      margin-bottom:6px;
+    }
+    .glossary-term{
+      font-weight:900;color:var(--blue);
+      font-size:11.5px;
+    }
+    .glossary-desc{
+      font-size:11px;color:var(--sub);
+      margin-top:2px;
+    }
+
+    /* ========== 新增：工具提示 ========== */
+    .glossary-term-highlight{
+      border-bottom:1px dashed var(--blue);
+      cursor:help;
+      position:relative;
+      transition:background 0.2s;
+    }
+    .glossary-term-highlight:hover{
+      background:rgba(10,132,255,.08);
+    }
+    .tooltip{
+      position:fixed;
+      background:rgba(0,0,0,.92);
+      color:#fff;
+      padding:10px 14px;
+      border-radius:12px;
+      font-size:12px;
+      max-width:260px;
+      z-index:9999;
+      pointer-events:none;
+      opacity:0;
+      transform:translateY(8px);
+      transition:opacity 0.2s,transform 0.2s;
+      box-shadow:0 8px 24px rgba(0,0,0,.2);
+    }
+    .tooltip.visible{
+      opacity:1;
+      transform:translateY(0);
+    }
+    .tooltip-title{
+      font-weight:900;
+      margin-bottom:4px;
+      color:rgba(255,255,255,.95);
+    }
+    .tooltip-desc{
+      font-size:11px;
+      color:rgba(255,255,255,.8);
+      line-height:1.5;
+    }
+
+    /* ========== 新增：双时间尺度趋势图 ========== */
+    .dual-spark{
+      margin-top:10px;
+      padding:12px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:16px;
+      background:rgba(255,255,255,.78);
+    }
+    .dual-spark-header{
+      display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;
+    }
+    .dual-spark-title{font-size:11.5px;color:var(--sub);font-weight:850}
+    .dual-spark-legend{display:flex;gap:12px;font-size:10px;color:var(--sub)}
+    .legend-item{display:flex;align-items:center;gap:4px}
+    .legend-dot{width:8px;height:8px;border-radius:50%}
+    .dual-spark-realtime{margin-bottom:10px}
+    .dual-spark-trend{margin-bottom:4px}
+    .spark-label{
+      font-size:10px;color:var(--sub);font-weight:750;
+      margin-bottom:4px;
+    }
+    .spark-svg-container{
+      position:relative;
+      height:80px;
+      padding-left:45px;
+      padding-bottom:20px;
+    }
+    .spark-svg{
+      width:100%;height:100%;
+      display:block;
+    }
+    .spark-yaxis{
+      position:absolute;left:0;top:0;bottom:20px;width:45px;
+      display:flex;flex-direction:column;justify-content:space-between;
+      font-size:9px;color:var(--sub);font-weight:700;
+      text-align:right;padding-right:6px;
+    }
+    .spark-yaxis span{
+      line-height:1.2;
+    }
+    .spark-xaxis{
+      position:absolute;left:45px;right:0;bottom:0;height:20px;
+      display:flex;justify-content:space-between;
+      font-size:9px;color:var(--sub);font-weight:700;
+      text-align:center;
+      align-items:center;
+    }
+    .spark-xaxis span:first-child,
+    .spark-xaxis span:last-child{
+      position:relative;
+    }
+    .spark-target-line{
+      position:absolute;left:45px;right:0;
+      border-top:1px dashed rgba(255,59,48,.5);
+      pointer-events:none;
+    }
+    .spark-target-label{
+      position:absolute;right:0;top:-14px;
+      font-size:9px;color:var(--green);font-weight:900;
+    }
+    .spark-current-marker{
+      position:absolute;right:45px;
+      width:0;height:0;
+      border-left:2px solid var(--blue);
+      border-top:6px solid transparent;
+      border-bottom:6px solid transparent;
+    }
+    .spark-arrow-indicator{
+      position:absolute;left:50%;top:50%;
+      transform:translate(-50%,-50%);
+      display:flex;flex-direction:column;align-items:center;
+      pointer-events:none;
+      transition:all 0.3s;
+    }
+    .spark-arrow-up .icon{
+      font-size:24px;color:var(--green);text-shadow:0 2px 4px rgba(0,0,0,.2);
+    }
+    .spark-arrow-down .icon{
+      font-size:24px;color:var(--red);text-shadow:0 2px 4px rgba(0,0,0,.2);
+    }
+    .spark-arrow-text{
+      font-size:10px;font-weight:900;
+      margin-top:2px;
+      padding:4px 8px;
+      border-radius:6px;
+      background:rgba(0,0,0,.8);
+      color:#fff;
+    }
+    .spark-overlay{
+      position:absolute;top:0;left:0;right:0;bottom:0;
+      pointer-events:none;
+    }
+    .spark-tooltip{
+      position:absolute;
+      background:rgba(0,0,0,.85);
+      color:#fff;
+      padding:4px 8px;
+      border-radius:6px;
+      font-size:10px;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity 0.15s;
+      white-space:nowrap;
+    }
+
+    /* ========== 新增：Step 动画 ========== */
+    .step-arrow{
+      display:inline-flex;align-items:center;
+      color:var(--sub);
+      font-size:14px;
+      margin:0 4px;
+    }
+    .step.active .step-arrow{
+      color:var(--blue);
+    }
+    .step-icon{
+      display:inline-block;width:16px;height:16px;
+      border-radius:50%;
+      border:2px solid var(--sub);
+      text-align:center;line-height:12px;
+      font-size:10px;font-weight:900;
+      margin-right:4px;
+      transition:all 0.3s ease;
+    }
+    .step.active .step-icon{
+      border-color:var(--blue);
+      background:rgba(10,132,255,.15);
+      color:var(--blue);
+    }
+    .step.completed .step-icon{
+      background:var(--green);
+      border-color:var(--green);
+      color:#fff;
+    }
+    .step-check{
+      opacity:0;transform:scale(0);
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .step.completed .step-check{
+      opacity:1;transform:scale(1);
+    }
+    @keyframes pulse{
+      0%,100%{box-shadow:0 10px 18px rgba(10,132,255,.12)}
+      50%{box-shadow:0 10px 30px rgba(10,132,255,.25),0 0 0 4px rgba(10,132,255,.1)}
+    }
+    .step.active.pulsing{
+      animation:pulse 1.5s infinite;
+    }
+
+    /* ========== 新增：状态徽章 ========== */
+    .status-badge{
+      position:absolute;top:8px;left:8px;
+      width:36px;height:36px;
+      border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;
+      box-shadow:0 4px 12px rgba(0,0,0,.1);
+      transition:all 0.3s ease;
+    }
+    .status-badge.comfortable{background:linear-gradient(135deg,#34c759,#30b055)}
+    .status-badge.warm{background:linear-gradient(135deg,#ff9f0a,#f5851a)}
+    .status-badge.hot{background:linear-gradient(135deg,#ff3b30,#d63126)}
+    .status-badge.cold{background:linear-gradient(135deg,#0a84ff,#0066cc)}
+
+    /* ========== 新增：房间状态动画 ========== */
+    .room-bg-transition{
+      transition:background 0.5s ease, box-shadow 0.5s ease;
+    }
+    @keyframes tempRise{
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+    @keyframes tempFall{
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+    .temp-rising{
+      animation:tempRise 2s ease infinite;
+      background:linear-gradient(90deg,rgba(255,59,48,.1),rgba(255,159,10,.2),rgba(255,59,48,.1));
+      background-size:200% 200%;
+    }
+    .temp-falling{
+      animation:tempFall 2s ease infinite;
+      background:linear-gradient(90deg,rgba(10,132,255,.1),rgba(52,199,89,.2),rgba(10,132,255,.1));
+      background-size:200% 200%;
+    }
+
+    /* ========== 新增：Toast 通知 ========== */
+    .toast-container{
+      position:fixed;bottom:20px;left:50%;
+      transform:translateX(-50%);
+      z-index:9999;
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .toast{
+      background:rgba(0,0,0,.88);
+      color:#fff;
+      padding:12px 18px;
+      border-radius:12px;
+      font-size:12.5px;
+      font-weight:700;
+      box-shadow:0 8px 24px rgba(0,0,0,.15);
+      display:flex;align-items:center;gap:8px;
+      opacity:0;
+      transform:translateY(20px);
+      animation:toastIn 0.3s forwards;
+    }
+    .toast.success{border-left:4px solid var(--green)}
+    .toast.info{border-left:4px solid var(--blue)}
+    .toast.warn{border-left:4px solid var(--orange)}
+    @keyframes toastIn{
+      to{opacity:1;transform:translateY(0)}
+    }
+    @keyframes toastOut{
+      to{opacity:0;transform:translateY(-20px)}
+    }
+
+    /* ========== 修改网格布局以适应帮助按钮 ========== */
+    .app{max-width:1400px;margin:18px auto 28px;padding:0 14px;padding-right:60px;}
+    @media (max-width: 1200px){.app{padding-right:14px}}
+    
+    
+    /* ========== 执行进度提示 ========== */
+    .step-progress{
+      position:fixed;top:120px;left:50%;transform:translateX(-50%);
+      z-index:9999;background:rgba(255,255,255,.95);
+      padding:10px 20px;border-radius:999px;
+      box-shadow:0 4px 16px rgba(0,0,0,.1);
+      border:1px solid var(--line);
+      display:flex;align-items:center;gap:12px;
+      font-size:13px;font-weight:900;
+    }
+    .step-progress-bar{
+      width:200px;height:6px;background:rgba(0,0,0,.1);
+      border-radius:999px;overflow:hidden;
+    }
+    .step-progress-fill{
+      height:100%;background:linear-gradient(90deg,var(--blue),var(--green));
+      border-radius:999px;transition:width 0.3s ease;
+    }
+    
+    /* ========== 完成总结卡片 ========== */
+    .summary-card{
+      position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      z-index:10001;background:rgba(255,255,255,.98);
+      padding:28px 32px;border-radius:20px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      border:2px solid var(--green);
+      max-width:520px;width:90%;
+      animation:summaryCardIn 0.5s ease;
+    }
+    @keyframes summaryCardIn{
+      from{opacity:0;transform:translate(-50%,-50%) scale(0.85);}
+      to{opacity:1;transform:translate(-50%,-50%) scale(1);}
+    }
+    .summary-header{
+      text-align:center;margin-bottom:20px;
+    }
+    .summary-icon{font-size:48px;margin-bottom:8px;}
+    .summary-title{font-size:18px;font-weight:900;color:var(--text);}
+    .summary-comparison{
+      display:flex;justify-content:space-between;gap:16px;
+      margin-bottom:20px;
+    }
+    .summary-before,.summary-after{
+      flex:1;padding:16px;border-radius:14px;
+      text-align:center;
+    }
+    .summary-before{background:rgba(255,159,10,.1);border:1px solid rgba(255,159,10,.3);}
+    .summary-after{background:rgba(52,199,89,.1);border:1px solid rgba(52,199,89,.3);}
+    .summary-label{font-size:11px;color:var(--sub);font-weight:700;margin-bottom:8px;}
+    .summary-value{font-size:20px;font-weight:950;color:var(--text);}
+    .summary-status{font-size:12px;color:var(--sub);margin-top:4px;}
+    .summary-arrow{
+      display:flex;align-items:center;font-size:24px;color:var(--green);
+    }
+    .summary-close{
+      width:100%;padding:12px;border-radius:10px;
+      background:var(--green);color:#fff;
+      border:none;font-weight:900;font-size:13px;
+      cursor:pointer;transition:.2s;
+    }
+    .summary-close:hover{background:#30b055;transform:translateY(-1px);}
+  </style>
+</head>
+<body>
+<!-- 帮助面板和按钮 -->
+<button class="help-toggle" id="helpToggle" title="打开帮助">?</button>
+<div class="help-panel" id="helpPanel">
+  <div class="help-header">
+    <h3>📚 帮助中心</h3>
+    <button class="help-close" id="helpClose">×</button>
+  </div>
+  <div class="help-content">
+    <div class="help-section">
+      <div class="help-section-title">📖 系统简介</div>
+      <div class="help-text">
+        这是一个全屋智能舒适与安全系统演示，通过虚拟传感器模拟真实家居环境，AI 自动调节温度以保持老人舒适。系统会分析温度、湿度、人体活动等多维度数据，做出智能决策。
+      </div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">🎮 快速入门</div>
+      <ol class="help-list">
+        <li>从左侧选择场景模板（如"夜间睡眠"）</li>
+        <li>点击"自动模拟"开关开始运行</li>
+        <li>点击右侧 Step1-6 查看 AI 决策过程</li>
+        <li>观察平面图小人位置和卡通形象变化</li>
+      </ol>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">📚 术语解释</div>
+      <div class="glossary-item">
+        <div class="glossary-term">Humidex（闷热指数）</div>
+        <div class="glossary-desc">结合温度和湿度判断人体真实感受，值越高越闷热</div>
+      </div>
+      <div class="glossary-item">
+        <div class="glossary-term">met（代谢率）</div>
+        <div class="glossary-desc">表示活动强度。睡眠约1.0，静坐约1.2，走动约2.0</div>
+      </div>
+      <div class="glossary-item">
+        <div class="glossary-term">防抖</div>
+        <div class="glossary-desc">避免设备频繁开关，包括死区、保持时间、限速</div>
+      </div>
+      <div class="glossary-item">
+        <div class="glossary-term">融合温度</div>
+        <div class="glossary-desc">多个传感器数据按可信度加权平均，更准确可靠</div>
+      </div>
+      <div class="glossary-item">
+        <div class="glossary-term">Holt 预测</div>
+        <div class="glossary-desc">时间序列算法，用历史数据预测未来温度趋势</div>
+      </div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">💡 小贴士</div>
+      <ul class="help-list">
+        <li>点击温度源行可高亮对应房间</li>
+        <li>尝试"注入异常"看系统如何处理传感器故障</li>
+        <li>记录偏好后系统会学习你的习惯</li>
+        <li>双时间尺度趋势图：实时细节+长期趋势</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Toast 通知容器 -->
+<div class="toast-container" id="toastContainer"></div>
+
+
+<!-- 执行进度提示 -->
+<div class="step-progress" id="stepProgress" style="display:none;">
+  <span id="stepProgressText">执行中...</span>
+  <div class="step-progress-bar">
+    <div class="step-progress-fill" id="stepProgressFill" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- 完成总结卡片 -->
+<div class="summary-card" id="summaryCard" style="display:none;">
+  <div class="summary-header">
+    <div class="summary-icon">✅</div>
+    <div class="summary-title">执行完成</div>
+  </div>
+  <div class="summary-comparison">
+    <div class="summary-before">
+      <div class="summary-label">初始状态</div>
+      <div class="summary-value" id="summaryBeforeTemp">—</div>
+      <div class="summary-status" id="summaryBeforeStatus">—</div>
+    </div>
+    <div class="summary-arrow">→</div>
+    <div class="summary-after">
+      <div class="summary-label">最终状态</div>
+      <div class="summary-value" id="summaryAfterTemp">—</div>
+      <div class="summary-status" id="summaryAfterStatus">—</div>
+    </div>
+  </div>
+  <button class="summary-close" id="summaryClose">关闭</button>
+</div>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="title">
+        <h1>全屋智能舒适与安全系统（递进式 AI 分析）</h1>
+        <div class="sub">虚拟传感器 → 占用融合 → 动态融合 → 体感指数 → 预测与防抖控制 → 可解释 + 可交互调试</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="pill toggle" title="开启后每秒自动生成虚拟传感器数据，并实时跑全链路算法">
+        <div class="switch" id="autoSwitch" role="switch" aria-checked="false"></div>
+        <div><b style="color:var(--text)">自动模拟</b><div class="tiny">按Step顺序执行（每步2秒）</div></div>
+      </div>
+      <button class="btn" id="tickBtn">手动推进 1 步</button>
+      <button class="btn primary" id="recordPrefBtn">记录一次手动偏好</button>
+      <button class="btn danger" id="injectAnomalyBtn">注入异常（一次）</button>
+    </div>
+  </div>
+
+
+  <div class="grid" id="mainGrid">
+    <!-- 左侧面板收起按钮 -->
+    <button class="left-collapse-btn" id="leftCollapseBtn" title="收起/展开虚拟传感器面板">◀</button>
+    
+    <!-- Left controls -->
+    <div class="card" id="leftPanel">
+      <div class="hd">
+        <div>
+          <div class="h">虚拟传感器面板</div>
+          <div class="d">调节数据 → 系统实时推理 → 平面图与右侧“递进分析”同步变化</div>
+        </div>
+        <div class="tiny muted" id="tickLabel">tick: 0</div>
+      </div>
+      <div class="bd">
+        <div class="section">
+          <div class="row">
+            <div class="label">
+              <div class="name">场景模板</div>
+              <div class="hint">一键生成更像真实的组合数据</div>
+            </div>
+            <div class="control" style="justify-content:flex-end">
+              <select id="sceneSelect">
+                <option value="scene1">场景1：下午3点·卧室·老人静坐·闷热不适</option>
+                <option value="scene2">场景2：下午4点·卧室·老人静坐·闷热（预测关闭）</option>
+                <option value="scene3">场景3：上午11点·全屋·无人·节能模式</option>
+                <option value="scene4">场景4：下午2点·客厅·老人静坐·略闷热</option>
+                <option value="scene5">场景5：早上8点·卧室·老人睡眠·偏冷</option>
+                <option value="scene6">场景6：傍晚6点·卧室·老人静坐·高温高湿</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label">
+              <div class="name">模拟时间（小时）</div>
+              <div class="hint">偏好学习会按小时统计</div>
+            </div>
+            <div class="control">
+              <input id="hour" type="range" min="0" max="23" step="1" value="21"/>
+              <div class="value" id="hourV">21:00</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label">
+              <div class="name">全屋相对湿度</div>
+              <div class="hint">用于体感（Humidex）</div>
+            </div>
+            <div class="control">
+              <input id="rh" type="range" min="20" max="90" step="1" value="55"/>
+              <div class="value" id="rhV">55%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="row">
+            <div class="label">
+              <div class="name">卧室温度</div>
+              <div class="hint">°C</div>
+            </div>
+            <div class="control">
+              <input id="t_bed" type="range" min="18" max="30" step="0.1" value="25.0"/>
+              <div class="value" id="t_bedV">25.0°C</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label">
+              <div class="name">客厅温度</div>
+              <div class="hint">°C</div>
+            </div>
+            <div class="control">
+              <input id="t_liv" type="range" min="18" max="30" step="0.1" value="24.5"/>
+              <div class="value" id="t_livV">24.5°C</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label">
+              <div class="name">卫生间温度</div>
+              <div class="hint">°C（洗澡场景会升高）</div>
+            </div>
+            <div class="control">
+              <input id="t_bath" type="range" min="20" max="40" step="0.1" value="28.0"/>
+              <div class="value" id="t_bathV">28.0°C</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="row">
+            <div class="label">
+              <div class="name">毫米波（卧室）</div>
+              <div class="hint">presence / micro-motion / breathing</div>
+            </div>
+            <div class="control" style="min-width:240px">
+              <select id="radarBed">
+                <option value="idle">无人</option>
+                <option value="sleep" selected>睡眠（微动+呼吸）</option>
+                <option value="sit">静坐（轻微动作）</option>
+                <option value="walk">走动（明显动作）</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label">
+              <div class="name">毫米波（客厅）</div>
+              <div class="hint">presence / micro-motion / breathing</div>
+            </div>
+            <div class="control" style="min-width:240px">
+              <select id="radarLiv">
+                <option value="idle" selected>无人</option>
+                <option value="sleep">睡眠</option>
+                <option value="sit">静坐</option>
+                <option value="walk">走动</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label">
+              <div class="name">毫米波（卫生间）</div>
+              <div class="hint">presence / micro-motion / breathing</div>
+            </div>
+            <div class="control" style="min-width:240px">
+              <select id="radarBath">
+                <option value="idle" selected>无人</option>
+                <option value="sleep">睡眠</option>
+                <option value="sit">静坐</option>
+                <option value="walk">走动</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="label">
+              <div class="name">PIR 大动作（客厅）</div>
+              <div class="hint">红外补充（对静止不敏感）</div>
+            </div>
+            <div class="control">
+              <input id="pirLiv" type="range" min="0" max="1" step="1" value="0"/>
+              <div class="value" id="pirLivV">0</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="label">
+              <div class="name">门磁（卧室门）</div>
+              <div class="hint">开/关（用于推断与通风策略）</div>
+            </div>
+            <div class="control">
+              <select id="doorBed">
+                <option value="0" selected>关闭</option>
+                <option value="1">打开</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="label">
+              <div class="name">跌倒风险（卫生间）</div>
+              <div class="hint">0~1（高风险触发安全优先）</div>
+            </div>
+            <div class="control">
+              <input id="fall" type="range" min="0" max="1" step="0.01" value="0.12"/>
+              <div class="value" id="fallV">0.12</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="label">
+              <div class="name">手动覆盖（设定温度）</div>
+              <div class="hint">开启后系统只解释不自动改</div>
+            </div>
+            <div class="control">
+              <select id="overrideOn">
+                <option value="0" selected>关闭</option>
+                <option value="1">开启</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="label">
+              <div class="name">覆盖温度</div>
+              <div class="hint">°C（仅覆盖开启时生效）</div>
+            </div>
+            <div class="control">
+              <input id="overrideTemp" type="range" min="20" max="28" step="0.1" value="25.5"/>
+              <div class="value" id="overrideTempV">25.5°C</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="note">
+            <b>提示：</b>右侧已改成“递进式 AI 决策流水线”。你可以点 Step1~Step6 逐步看 AI 怎么想；点“温度源列表”会高亮对应房间（便于调试讲解）。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center floorplan -->
+    <div class="card">
+      <div class="hd">
+        <div>
+          <div class="h">全屋平面图（生动可视化）</div>
+          <div class="d">房间热感、占用概率、小人位置与策略同步变化</div>
+        </div>
+        <div class="tiny muted" id="focusRoomLabel">当前聚焦：卧室</div>
+      </div>
+      <div class="floor-wrap">
+        <div class="floor-top">
+          <div class="chips" id="roomChips">
+            <div class="chip active" data-room="bedroom">卧室</div>
+            <div class="chip" data-room="living">客厅</div>
+            <div class="chip" data-room="bathroom">卫生间</div>
+          </div>
+          <div class="tiny muted" id="systemMode">系统模式：自动控制</div>
+        </div>
+        <div class="plan" id="plan">
+          <div class="glow" id="glow"></div>
+
+          <div class="room room-bg-transition" id="room_bed" data-room="bedroom" style="left:18px; top:18px; width: 55%; height: 62%;">
+            <div class="inner">
+              <div>
+                <div class="rname">卧室</div>
+                <div class="subline" id="bedLine">舒适状态：—</div>
+              </div>
+              <div class="meta">
+                <div>
+                  <div class="thermo" id="bedTemp">—</div>
+                  <div class="subline" id="bedHum">—</div>
+                </div>
+                <div class="badge"><span class="dot" id="bedDot"></span><span id="bedOcc">占用 —</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="room room-bg-transition" id="room_liv" data-room="living" style="right:18px; top:18px; width: 40%; height: 42%;">
+            <div class="inner">
+              <div>
+                <div class="rname">客厅</div>
+                <div class="subline" id="livLine">舒适状态：—</div>
+              </div>
+              <div class="meta">
+                <div>
+                  <div class="thermo" id="livTemp">—</div>
+                  <div class="subline" id="livHum">—</div>
+                </div>
+                <div class="badge"><span class="dot" id="livDot"></span><span id="livOcc">占用 —</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="room room-bg-transition" id="room_bath" data-room="bathroom" style="right:18px; bottom:18px; width: 40%; height: 34%;">
+            <div class="inner">
+              <div>
+                <div class="rname">卫生间</div>
+                <div class="subline" id="bathLine">舒适状态：—</div>
+              </div>
+              <div class="meta">
+                <div>
+                  <div class="thermo" id="bathTemp">—</div>
+                  <div class="subline" id="bathHum">—</div>
+                </div>
+                <div class="badge"><span class="dot" id="bathDot"></span><span id="bathOcc">占用 —</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="person" id="person" title="系统推断的当前人在此房间（最大占用概率）">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4 0-7 2-7 5v1h14v-1c0-3-3-5-7-5Z" fill="rgba(0,0,0,.78)"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- 卡通形象区域：当前房间体感状态 -->
+        <div class="avatar-section" id="avatarSection">
+          <div class="avatar-header">
+            <div class="avatar-title">👴 当前房间体感状态</div>
+            <div class="tiny muted" id="avatarRoomName">卧室</div>
+          </div>
+          <div class="avatar-container">
+            <div class="avatar-svg" id="avatarSvg">
+              <!-- SVG 内容由 JavaScript 动态生成 -->
+            </div>
+            <div class="avatar-info">
+              <div class="avatar-status" id="avatarStatus">舒适</div>
+              <div class="avatar-desc" id="avatarDesc">Humidex: 26 · 温度适宜</div>
+              <div class="avatar-hint" id="avatarHint">
+                💡 卡通形象反映老人的真实体感。温度和湿度变化时，形象会相应改变。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="split">
+            <div>
+              <div class="tiny muted"><b>执行摘要</b>（当前房间输出）</div>
+              <div class="mini" style="margin-top:10px">
+                <div class="t">当前控制房间</div>
+                <div class="v" id="execRoom">—</div>
+                <div class="s" id="execAction">—</div>
+              </div>
+            </div>
+            <div>
+              <div class="tiny muted"><b>安全优先</b>（卫生间）</div>
+              <div class="mini" style="margin-top:10px">
+                <div class="t">风险与策略</div>
+                <div class="v" id="safety">—</div>
+                <div class="s" id="safetyHint">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right: Progressive AI Decision Panel -->
+    <div class="card">
+      <div class="hd">
+        <div>
+          <div class="h">AI 递进分析（时间线 + 对话式解释）</div>
+          <div class="d">点 Step 看“证据 → 融合 → 体感 → 预测 → 动作 → 验证”；点温度源行可高亮房间</div>
+        </div>
+      </div>
+
+      <div class="bd">
+        <div class="tabs" id="tabs">
+          <div class="tab active" data-room="bedroom">卧室</div>
+          <div class="tab" data-room="living">客厅</div>
+          <div class="tab" data-room="bathroom">卫生间</div>
+        </div>
+
+        <!-- Timeline Steps - 重新排序：证据→融合→判断→预测→计算→执行 -->
+        <div class="timeline" id="timeline">
+          <div class="step active pulsing" data-step="1">
+            <div class="s1"><span class="step-icon" id="stepIcon1">1</span><span class="step-check">✓</span>Step 1</div>
+            <div class="s2"><span class="step-arrow">→</span>证据：有人吗</div>
+            <div class="s3" id="st1">—</div>
+          </div>
+          <div class="step" data-step="2">
+            <div class="s1"><span class="step-icon" id="stepIcon2">2</span><span class="step-check">✓</span>Step 2</div>
+            <div class="s2"><span class="step-arrow">→</span>温度融合</div>
+            <div class="s3" id="st2">—</div>
+          </div>
+          <div class="step" data-step="3">
+            <div class="s1"><span class="step-icon" id="stepIcon3">3</span><span class="step-check">✓</span>Step 3</div>
+            <div class="s2"><span class="step-arrow">→</span>体感判断</div>
+            <div class="s3" id="st3">—</div>
+          </div>
+          <div class="step" data-step="4">
+            <div class="s1"><span class="step-icon" id="stepIcon4">4</span><span class="step-check">✓</span>Step 4</div>
+            <div class="s2"><span class="step-arrow">→</span>趋势预测</div>
+            <div class="s3" id="st4">—</div>
+          </div>
+          <div class="step" data-step="5">
+            <div class="s1"><span class="step-icon" id="stepIcon5">5</span><span class="step-check">✓</span>Step 5</div>
+            <div class="s2"><span class="step-arrow">→</span>AI 计算动作</div>
+            <div class="s3" id="st5">—</div>
+          </div>
+          <div class="step" data-step="6">
+            <div class="s1"><span class="step-icon" id="stepIcon6">6</span><span class="step-check">✓</span>Step 6</div>
+            <div class="s2"><span class="step-arrow">→</span>执行与验证</div>
+            <div class="s3" id="st6">—</div>
+          </div>
+        </div>
+
+        <!-- Cards - 按新顺序排列 -->
+        <div class="cards">
+          <!-- Step 1: 占用证据 -->
+          <div class="ai-card" id="card1">
+            <div class="ai-head">
+              <div>
+                <div class="ai-title">Step 1 · 证据：房间有人吗？</div>
+                <div class="ai-sub">毫米波 + PIR + 门磁 → 占用概率；双阈值防抖</div>
+              </div>
+              <span class="tag" id="tag1">—</span>
+            </div>
+
+            <div class="bubble" id="bubble1">—</div>
+
+            <div class="mini">
+              <div class="t">占用概率 p(occupied)</div>
+              <div class="v" id="kOcc1">—</div>
+              <div class="s" id="kOccNote1">—</div>
+              <div class="bar"><div id="kOccBar1"></div></div>
+            </div>
+
+            <details>
+              <summary>工程公式（可读版）</summary>
+              <div class="code" id="f1">—</div>
+            </details>
+          </div>
+
+          <!-- Step 2: 温度融合 -->
+          <div class="ai-card hide" id="card2">
+            <div class="ai-head">
+              <div>
+                <div class="ai-title">Step 2 · 温度融合（哪个点更可信）</div>
+                <div class="ai-sub">床头 / 窗边 / 出风口 → 可信度 score → 权重 W</div>
+              </div>
+              <span class="tag" id="tag2">—</span>
+            </div>
+
+            <div class="bubble" id="bubble2">—</div>
+
+            <div class="list" id="sensorList">
+              <!-- rows injected by JS -->
+            </div>
+
+            <details>
+              <summary>工程公式（可读版）</summary>
+              <div class="code" id="f2">—</div>
+            </details>
+          </div>
+
+          <!-- Step 3: 体感判断 -->
+          <div class="ai-card hide" id="card3">
+            <div class="ai-head">
+              <div>
+                <div class="ai-title">Step 3 · 体感判断（热不热/闷不闷）</div>
+                <div class="ai-sub">Humidex 闷热指数 + met 活动强度 → 舒适等级</div>
+              </div>
+              <span class="tag" id="tag3">—</span>
+            </div>
+
+            <div class="bubble" id="bubble3">—</div>
+
+            <div class="kpi-grid">
+              <div class="mini">
+                <div class="t">Humidex（闷热指数）</div>
+                <div class="v" id="kHumidex3">—</div>
+                <div class="s" id="kHumNote3">—</div>
+              </div>
+              <div class="mini">
+                <div class="t">融合温度 / 湿度</div>
+                <div class="v" id="kEnv3">—</div>
+                <div class="s" id="kEnvNote3">—</div>
+              </div>
+            </div>
+
+            <details>
+              <summary>工程公式（可读版）</summary>
+              <div class="code" id="f3">—</div>
+            </details>
+          </div>
+
+          <!-- Step 4: 趋势预测 -->
+          <div class="ai-card hide" id="card4">
+            <div class="ai-head">
+              <div>
+                <div class="ai-title">Step 4 · 趋势预测（提前 15 分钟）</div>
+                <div class="ai-sub">Holt 平滑 + 趋势外推，避免控制滞后</div>
+              </div>
+              <span class="tag" id="tag4">—</span>
+            </div>
+
+            <div class="bubble" id="bubble4">—</div>
+
+            <!-- 双时间尺度温度趋势图（带坐标轴） -->
+            <div class="dual-spark">
+              <div class="dual-spark-header">
+                <div class="dual-spark-title">温度趋势预测（双时间尺度 + 坐标轴）</div>
+                <div class="dual-spark-legend">
+                  <div class="legend-item"><span class="legend-dot" style="background:rgba(10,132,255,.9)"></span> 实时30秒</div>
+                  <div class="legend-item"><span class="legend-dot" style="background:rgba(52,199,89,.85)"></span> 趋势10分钟</div>
+                  <div class="legend-item"><span class="legend-dot" style="background:rgba(34,199,89,.9)"></span> 设定温度</div>
+                </div>
+              </div>
+              <div class="dual-spark-realtime">
+                <div class="spark-label">实时视图（30秒 · 高采样率 + 当前值标记）</div>
+                <div class="spark-svg-container">
+                  <div class="spark-yaxis" id="tempYAxisReal4">—</div>
+                  <svg id="sparkTempRealtime4" class="spark-svg" viewBox="0 0 300 80" preserveAspectRatio="none">
+                    <path id="sparkTempPathRealtime4" d="" fill="none" stroke="rgba(10,132,255,.9)" stroke-width="2.5"/>
+                    <path id="sparkTempAreaRealtime4" d="" fill="rgba(10,132,255,.15)"/>
+                  </svg>
+                  <div class="spark-current-marker" id="tempCurrentMarker4" style="display:none;"></div>
+                  <div class="spark-arrow-indicator" id="tempArrowIndicator4">
+                    <span class="icon" id="tempArrowIcon4">↑</span>
+                    <span class="spark-arrow-text" id="tempArrowText4">调节至 25.5°</span>
+                  </div>
+                  <div class="spark-xaxis"><span>-30s</span><span>-15s</span><span>现在</span></div>
+                  <div class="spark-target-line" id="tempTargetReal4" style="border-top-color:rgba(34,199,89,.6);display:none;"></div>
+                  <div class="spark-target-label" id="tempTargetLabelReal4" style="color:var(--green);display:none;">目标 26°</div>
+                </div>
+              </div>
+              <div class="dual-spark-trend">
+                <div class="spark-label">趋势视图（10分钟 · 长期趋势 + 调节方向）</div>
+                <div class="spark-svg-container">
+                  <div class="spark-yaxis" id="tempYAxisTrend4">—</div>
+                  <svg id="sparkTempTrend4" class="spark-svg" viewBox="0 0 300 80" preserveAspectRatio="none">
+                    <path id="sparkTempPathTrend4" d="" fill="none" stroke="rgba(52,199,89,.85)" stroke-width="2.5"/>
+                    <path id="sparkTempAreaTrend4" d="" fill="rgba(52,199,89,.12)"/>
+                  </svg>
+                  <div class="spark-arrow-indicator" id="tempArrowIndicatorTrend4" style="display:none;">
+                    <span class="icon" id="tempArrowIconTrend4">↑</span>
+                    <span class="spark-arrow-text" id="tempArrowTextTrend4">调节中</span>
+                  </div>
+                  <div class="spark-xaxis"><span>-10min</span><span>-5min</span><span>现在</span></div>
+                  <div class="spark-target-line" id="tempTargetTrend4" style="border-top-color:rgba(34,199,89,.6);display:none;"></div>
+                  <div class="spark-target-label" id="tempTargetLabelTrend4" style="color:var(--green);display:none;">目标 26°</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="kpi-grid">
+              <div class="mini">
+                <div class="t">当前融合温度</div>
+                <div class="v" id="kTnow4">—</div>
+                <div class="s" id="kTnowNote4">—</div>
+              </div>
+              <div class="mini">
+                <div class="t">15 分钟预测</div>
+                <div class="v" id="kPred4">—</div>
+                <div class="s" id="kPredNote4">—</div>
+              </div>
+            </div>
+
+            <details>
+              <summary>工程公式（可读版）</summary>
+              <div class="code" id="f4">—</div>
+            </details>
+          </div>
+
+          <!-- Step 5: AI 计算动作 -->
+          <div class="ai-card hide" id="card5">
+            <div class="ai-head">
+              <div>
+                <div class="ai-title">Step 5 · AI 计算动作（如何调节）</div>
+                <div class="ai-sub">体感偏差 → 温度调整 → 防抖 → 最终设定温度</div>
+              </div>
+              <span class="tag" id="tag5">—</span>
+            </div>
+
+            <div class="bubble" id="bubble5">—</div>
+
+            <!-- AI 计算过程可视化 -->
+            <div class="mini" style="margin-bottom:10px;background:rgba(10,132,255,.05);border:1px solid rgba(10,132,255,.15);">
+              <div class="t" style="color:var(--blue)">🧮 AI 计算过程（可追溯）</div>
+              <div style="font-size:11px;line-height:1.6;margin-top:6px;color:var(--text);">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span>① 当前体感</span>
+                  <span id="aiStep1" style="font-weight:900">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span>② 偏差计算</span>
+                  <span id="aiStep2" style="font-weight:900">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span>③ 预测补偿</span>
+                  <span id="aiStep3" style="font-weight:900">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span>④ 偏好融合</span>
+                  <span id="aiStep4" style="font-weight:900">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding-top:4px;border-top:1px dashed rgba(0,0,0,.1);">
+                  <span style="font-weight:900;">✅ 最终设定</span>
+                  <span id="aiStep5" style="font-weight:900;color:var(--green)">—</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="kpi-grid">
+              <div class="mini">
+                <div class="t">设定温度（Setpoint）</div>
+                <div class="v" id="kSetpoint5">—</div>
+                <div class="s" id="kSetNote5">—</div>
+              </div>
+              <div class="mini">
+                <div class="t">风速 / 模式</div>
+                <div class="v" id="kWind5">—</div>
+                <div class="s" id="kWindNote5">—</div>
+              </div>
+            </div>
+
+            <details>
+              <summary>工程公式（可读版）</summary>
+              <div class="code" id="f5">—</div>
+            </details>
+          </div>
+
+          <!-- Step 6: 执行与验证 -->
+          <div class="ai-card hide" id="card6">
+            <div class="ai-head">
+              <div>
+                <div class="ai-title">Step 6 · 执行控制 + 结果验证</div>
+                <div class="ai-sub">设备执行 → Before/After 对比 → 预期效果</div>
+              </div>
+              <span class="tag" id="tag6">—</span>
+            </div>
+
+            <div class="bubble" id="bubble6">—</div>
+
+            <!-- 执行状态可视化 -->
+            <div class="mini" style="margin-bottom:10px;background:rgba(52,199,89,.05);border:1px solid rgba(52,199,89,.15);">
+              <div class="t" style="color:var(--green)">⚡ 执行状态</div>
+              <div style="font-size:11px;line-height:1.6;margin-top:6px;color:var(--text);">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span>控制房间</span>
+                  <span id="execRoom6" style="font-weight:900">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span>控制模式</span>
+                  <span id="execMode6" style="font-weight:900">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                  <span>防抖状态</span>
+                  <span id="execDebounce6" style="font-weight:900">—</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="compare">
+              <div class="mini">
+                <div class="t">Before（当前）</div>
+                <div class="v" id="bNow6">—</div>
+                <div class="s" id="bNowNote6">—</div>
+              </div>
+              <div class="mini">
+                <div class="t">After（目标温度）</div>
+                <div class="v" id="bAfter6">—</div>
+                <div class="s" id="bAfterNote6">—</div>
+              </div>
+            </div>
+
+            <details>
+              <summary>工程公式（可读版）</summary>
+              <div class="code" id="f6">—</div>
+            </details>
+          </div>
+        </div>
+
+        <!-- ========== Multi-Agent 流转可视化面板 ========== -->
+        <div class="section" id="agentFlowSection" style="display:none;">
+          <div class="tiny muted" style="margin-bottom:8px;"><b>🤖 Multi-Agent 决策流转</b>（Supervisor → Worker 实时流转）</div>
+
+          <!-- Agent 连接状态 -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div class="dot" id="agentStatusDot"></div>
+            <span style="font-size:11.5px;font-weight:750;" id="agentStatusText">Agent Engine: 未连接</span>
+            <button class="btn" style="padding:6px 10px;font-size:11px;" id="agentConnectBtn" onclick="checkAgentHealth()">检测连接</button>
+            <button class="btn primary" style="padding:6px 10px;font-size:11px;" id="agentRunBtn" onclick="triggerAgentAnalyze()">运行 Agent 分析</button>
+          </div>
+
+          <!-- Agent 流转图 -->
+          <div style="border:1px solid rgba(0,0,0,.06);border-radius:14px;background:rgba(255,255,255,.78);padding:12px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:wrap;">
+              <div class="agent-node" id="agentNode_supervisor" style="text-align:center;flex:1;min-width:60px;">
+                <div style="width:36px;height:36px;border-radius:10px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(10,132,255,.1);border:2px solid rgba(10,132,255,.2);transition:all 0.3s;" id="agentIcon_supervisor">🧠</div>
+                <div style="font-size:9px;font-weight:900;color:var(--sub);">Supervisor</div>
+              </div>
+              <div style="color:var(--sub);font-size:12px;">→</div>
+              <div class="agent-node" id="agentNode_perception" style="text-align:center;flex:1;min-width:60px;">
+                <div style="width:36px;height:36px;border-radius:10px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(0,0,0,.04);border:2px solid rgba(0,0,0,.08);transition:all 0.3s;" id="agentIcon_perception">👁️</div>
+                <div style="font-size:9px;font-weight:900;color:var(--sub);">感知</div>
+              </div>
+              <div style="color:var(--sub);font-size:12px;">→</div>
+              <div class="agent-node" id="agentNode_prediction" style="text-align:center;flex:1;min-width:60px;">
+                <div style="width:36px;height:36px;border-radius:10px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(0,0,0,.04);border:2px solid rgba(0,0,0,.08);transition:all 0.3s;" id="agentIcon_prediction">📈</div>
+                <div style="font-size:9px;font-weight:900;color:var(--sub);">预测</div>
+              </div>
+              <div style="color:var(--sub);font-size:12px;">→</div>
+              <div class="agent-node" id="agentNode_decision" style="text-align:center;flex:1;min-width:60px;">
+                <div style="width:36px;height:36px;border-radius:10px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(0,0,0,.04);border:2px solid rgba(0,0,0,.08);transition:all 0.3s;" id="agentIcon_decision">⚡</div>
+                <div style="font-size:9px;font-weight:900;color:var(--sub);">决策</div>
+              </div>
+              <div style="color:var(--sub);font-size:12px;">→</div>
+              <div class="agent-node" id="agentNode_verification" style="text-align:center;flex:1;min-width:60px;">
+                <div style="width:36px;height:36px;border-radius:10px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(0,0,0,.04);border:2px solid rgba(0,0,0,.08);transition:all 0.3s;" id="agentIcon_verification">✅</div>
+                <div style="font-size:9px;font-weight:900;color:var(--sub);">验证</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent 思考过程 -->
+          <div id="agentThoughts" style="border:1px solid rgba(0,0,0,.06);border-radius:14px;background:rgba(255,255,255,.78);overflow:hidden;max-height:300px;overflow-y:auto;">
+            <div style="padding:10px 12px;font-size:11.5px;color:var(--sub);text-align:center;">
+              点击 "运行 Agent 分析" 查看 Multi-Agent 协作过程
+            </div>
+          </div>
+
+          <!-- Agent 结果摘要 -->
+          <div id="agentResultSummary" style="display:none;margin-top:10px;padding:10px 12px;border:1px solid rgba(52,199,89,.2);border-radius:14px;background:rgba(52,199,89,.06);">
+            <div style="font-size:12px;font-weight:900;color:var(--green);margin-bottom:6px;">📊 Agent 分析结果</div>
+<div style="font-size:11.5px;line-height:1.6;" id="agentResultContent">—</div>
+</div>
+
+<!-- 决策历史时间线 -->
+<div id="decisionHistorySection" style="margin-top:10px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <span style="font-size:11.5px;font-weight:900;color:var(--sub);">📋 决策历史</span>
+    <button class="btn" style="padding:4px 10px;font-size:10px;" onclick="loadDecisionHistory()">刷新</button>
+  </div>
+  <div id="decisionHistoryList" style="max-height:260px;overflow-y:auto;border:1px solid rgba(0,0,0,.06);border-radius:14px;background:rgba(255,255,255,.78);">
+    <div style="padding:12px;font-size:11px;color:var(--sub);text-align:center;">加载中...</div>
+  </div>
+</div>
+
+<!-- 调度器状态 -->
+<div id="schedulerStatusBar" style="margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,.03);display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--sub);">
+  <div class="dot" id="schedulerDot" style="width:6px;height:6px;border-radius:50%;background:var(--sub);"></div>
+  <span id="schedulerStatusText">调度器: 检查中...</span>
+  <span style="margin-left:auto;" id="schedulerAnalyzeCount">—</span>
+</div>
+</div>
+
+        <div class="section">
+          <div class="tiny muted"><b>系统日志</b>（点击 Step/传感器行会记录说明）</div>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== Utils =====
+  const $ = (id)=>{
+    if(!id) return null; // 如果ID为null或undefined，直接返回null
+    const el = document.getElementById(id);
+    // 只在开发时输出警告，避免控制台噪音
+    // if(!el) console.warn(`元素未找到: ${id}`);
+    return el;
+  };
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const r1=(x)=>Math.round(x*10)/10;
+  const r2=(x)=>Math.round(x*100)/100;
+  const pct=(x)=>`${Math.round(x*100)}%`;
+  const nowStr=()=>new Date().toLocaleTimeString();
+  const sigmoid=(z)=>1/(1+Math.exp(-z));
+  const roomName=(k)=>k==="bedroom"?"卧室":(k==="living"?"客厅":"卫生间");
+  
+  // 安全的文本设置函数，防止XSS
+  const setText = (el, text)=>{
+    if(!el) return;
+    el.textContent = text;
+  };
+  
+  // 安全的HTML设置函数（仅用于已知安全的内容）
+  const setHTML = (el, html)=>{
+    if(!el) return;
+    el.innerHTML = html;
+  };
+  
+  // HTML转义函数，防止XSS
+  const escapeHTML = (str)=>{
+    if(typeof str !== 'string') return str;
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return str.replace(/[&<>"']/g, m => map[m]);
+  };
+  
+  // 创建安全的格式化文本（用于bubble等需要HTML格式的地方）
+  const createSafeHTML = (text)=>{
+    // 只允许特定的HTML标签
+    return escapeHTML(text)
+      .replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/g, '<b>$1</b>')
+      .replace(/&lt;br\/&gt;/g, '<br/>')
+      .replace(/&lt;br&gt;/g, '<br/>');
+  };
+
+  function addLog(tag, msg){
+    const el = $("log");
+    if(!el) return;
+    const line = document.createElement("div");
+    line.className = "l";
+    // 使用textContent避免XSS，但保留HTML结构
+    const timeSpan = document.createElement("span");
+    timeSpan.className = "muted";
+    timeSpan.textContent = `[${nowStr()}]`;
+    const tagB = document.createElement("b");
+    tagB.textContent = tag;
+    line.appendChild(timeSpan);
+    line.appendChild(document.createTextNode(" "));
+    line.appendChild(tagB);
+    line.appendChild(document.createTextNode(` — ${msg}`));
+    el.prepend(line);
+  }
+
+  // ========== 新增：Toast 通知系统 ==========
+  function showToast(message, type="info"){
+    const container = $("toastContainer");
+    if(!container) return;
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    let icon = type==="success"?"✓":type==="warn"?"⚠":"ℹ";
+    const iconSpan = document.createElement("span");
+    iconSpan.textContent = icon;
+    const msgSpan = document.createElement("span");
+    msgSpan.textContent = message;
+    toast.appendChild(iconSpan);
+    toast.appendChild(msgSpan);
+    container.appendChild(toast);
+    setTimeout(()=>{
+      toast.style.animation = "toastOut 0.3s forwards";
+      setTimeout(()=>toast.remove(), 300);
+    }, 3000);
+  }
+
+  // ========== 新增：SVG 卡通形象生成器 ==========
+  function getAvatarSVG(state, hx=26){
+    // state: comfortable, warm, hot, cold, danger
+    const baseSkin = "#F5D0B5";
+    const skinColors = {
+      comfortable: baseSkin,
+      warm: "#FFD4A3",
+      hot: "#FFB89A",
+      cold: "#E8D4E8"
+    };
+    const bgColors = {
+      comfortable: "rgba(52,199,89,.15)",
+      warm: "rgba(255,159,10,.15)",
+      hot: "rgba(255,59,48,.18)",
+      cold: "rgba(10,132,255,.15)",
+      danger: "rgba(255,59,48,.22)"
+    };
+
+    const skin = skinColors[state] || baseSkin;
+    const bg = bgColors[state] || bgColors.comfortable;
+
+    // 表情元素
+    let face = "", body = "", props = "";
+    switch(state){
+      case "comfortable":
+        face = `<ellipse cx="50" cy="42" rx="6" ry="4" fill="rgba(0,0,0,.7)"/>
+               <ellipse cx="62" cy="42" rx="6" ry="4" fill="rgba(0,0,0,.7)"/>
+               <path d="M50,52 Q56,58 62,52" stroke="rgba(0,0,0,.7)" stroke-width="2.5" fill="none"/>
+               <circle cx="70" cy="38" r="4" fill="rgba(255,200,150,.4)"/>`;
+        body = `<ellipse cx="56" cy="82" rx="20" ry="18" fill="#4A90D9"/>
+               <rect x="44" y="75" width="24" height="20" rx="8" fill="#5BA0E9"/>`;
+        props = ``;
+        break;
+      case "warm":
+        face = `<ellipse cx="50" cy="42" rx="6" ry="4" fill="rgba(0,0,0,.7)"/>
+               <ellipse cx="62" cy="42" rx="6" ry="4" fill="rgba(0,0,0,.7)"/>
+               <path d="M50,54 Q56,50 62,54" stroke="rgba(0,0,0,.7)" stroke-width="2.5" fill="none"/>
+               <circle cx="70" cy="38" r="4" fill="rgba(255,150,100,.5)"/>
+               <path d="M68,32 Q72,30 76,32" stroke="rgba(0,0,0,.4)" stroke-width="1.5" fill="none"/>`;
+        body = `<ellipse cx="56" cy="82" rx="20" ry="18" fill="#5BA0E9"/>
+               <path d="M38,72 Q36,68 40,70" stroke="rgba(0,0,0,.3)" stroke-width="2" fill="none"/>
+               <path d="M74,72 Q76,68 72,70" stroke="rgba(0,0,0,.3)" stroke-width="2" fill="none"/>`;
+        props = `<path d="M75,60 Q82,58 85,62" stroke="rgba(255,150,50,.6)" stroke-width="2" fill="none"/>
+                <circle cx="86" cy="64" r="2" fill="rgba(255,150,50,.6)"/>`; // 汗滴
+        break;
+      case "hot":
+        face = `<ellipse cx="50" cy="43" rx="5" ry="3" fill="rgba(0,0,0,.7)"/>
+               <ellipse cx="62" cy="43" rx="5" ry="3" fill="rgba(0,0,0,.7)"/>
+               <ellipse cx="56" cy="54" rx="4" ry="3" fill="rgba(200,100,100,.3)"/>
+               <path d="M52,50 Q56,48 60,50" stroke="rgba(0,0,0,.6)" stroke-width="2" fill="none"/>
+               <circle cx="72" cy="38" r="5" fill="rgba(255,120,80,.6)"/>`;
+        body = `<ellipse cx="56" cy="84" rx="18" ry="16" fill="#7BB8E8"/>
+               <path d="M40,70 Q36,66 42,68" stroke="rgba(0,0,0,.4)" stroke-width="2" fill="none"/>
+               <path d="M72,70 Q76,66 70,68" stroke="rgba(0,0,0,.4)" stroke-width="2" fill="none"/>`;
+        props = `<path d="M74,58 Q80,55 84,59" stroke="rgba(255,100,50,.7)" stroke-width="2" fill="none"/>
+                <circle cx="85" cy="60" r="2.5" fill="rgba(255,100,50,.7)"/>
+                <path d="M76,50 Q81,47 84,51" stroke="rgba(255,100,50,.5)" stroke-width="1.5" fill="none"/>`;
+        break;
+      case "cold":
+        face = `<circle cx="50" cy="42" r="5" fill="rgba(0,0,0,.7)"/>
+               <circle cx="62" cy="42" r="5" fill="rgba(0,0,0,.7)"/>
+               <path d="M50,52 Q56,48 62,52" stroke="rgba(0,0,0,.7)" stroke-width="2.5" fill="none"/>
+               <circle cx="48" cy="38" r="3" fill="rgba(150,180,220,.5)"/>
+               <circle cx="64" cy="38" r="3" fill="rgba(150,180,220,.5)"/>`;
+        body = `<ellipse cx="56" cy="83" rx="22" ry="20" fill="#6BA3D6"/>
+               <ellipse cx="56" cy="90" rx="18" ry="8" fill="#5C98CA"/>`;
+        props = `<path d="M72,45 L76,42 M74,47 L78,44" stroke="rgba(100,150,200,.5)" stroke-width="2"/>`; // 发抖线条
+        break;
+      case "danger":
+        face = `<ellipse cx="50" cy="42" rx="7" ry="5" fill="rgba(0,0,0,.8)"/>
+               <ellipse cx="62" cy="42" rx="7" ry="5" fill="rgba(0,0,0,.8)"/>
+               <ellipse cx="56" cy="54" rx="5" ry="4" fill="rgba(200,80,80,.4)"/>
+               <path d="M52,50 Q56,46 60,50" stroke="rgba(0,0,0,.7)" stroke-width="2.5" fill="none"/>`;
+        body = `<ellipse cx="56" cy="82" rx="20" ry="17" fill="#E8A0A0"/>
+               <path d="M36,68 L32,65 M74,68 L78,65" stroke="rgba(0,0,0,.5)" stroke-width="3"/>`;
+        props = `<path d="M72,55 Q78,52 82,56" stroke="rgba(255,50,50,.7)" stroke-width="2" fill="none"/>
+                <text x="78" y="62" font-size="10" fill="rgba(255,50,50,.8)">!</text>`;
+        break;
+    }
+
+    return `<svg viewBox="0 0 112 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:${bg};stop-opacity:1"/>
+          <stop offset="100%" style="stop-color:${bg};stop-opacity:0.3"/>
+        </linearGradient>
+      </defs>
+      <rect width="112" height="100" rx="16" fill="url(#bgGrad)"/>
+      <!-- 老人身体 -->
+      ${body}
+      <!-- 老人头部 -->
+      <ellipse cx="56" cy="48" rx="22" ry="24" fill="${skin}"/>
+      <!-- 头发 -->
+      <ellipse cx="56" cy="30" rx="18" ry="10" fill="rgba(200,200,200,.8)"/>
+      <!-- 眼镜 -->
+      <circle cx="50" cy="42" r="8" fill="none" stroke="rgba(100,100,100,.6)" stroke-width="1.5"/>
+      <circle cx="62" cy="42" r="8" fill="none" stroke="rgba(100,100,100,.6)" stroke-width="1.5"/>
+      <line x1="58" y1="42" x2="54" y2="42" stroke="rgba(100,100,100,.6)" stroke-width="1.5"/>
+      <!-- 表情 -->
+      ${face}
+      <!-- 额外道具 -->
+      ${props}
+    </svg>`;
+  }
+
+  // 获取状态对应的徽章 emoji
+  function getStatusBadge(level){
+    switch(level){
+      case "ok": return "😊";
+      case "warn": return "😓";
+      case "bad": return "😰";
+      default: return "😊";
+    }
+  }
+
+  // ========== 新增：双时间尺度历史数据 ==========
+  const dualHistory = {
+    humidex: { realtime: [], trend: [] },
+    temp: { realtime: [], trend: [] }
+  };
+
+  function pushDualHist(arr, v, maxRealtime=30, maxTrend=600){
+    arr.realtime.push(v);
+    if(arr.realtime.length > maxRealtime) arr.realtime.shift();
+
+    arr.trend.push(v);
+    if(arr.trend.length > maxTrend) arr.trend.shift();
+  }
+
+  function getTrendSamples(arr, count=30){
+    if(arr.length <= count) return arr;
+    const step = Math.floor(arr.length / count);
+    const result = [];
+    for(let i=0; i<count; i++){
+      const idx = Math.min(i * step, arr.length - 1);
+      result.push(arr[idx]);
+    }
+    return result;
+  }
+
+  // ========== 新增：双时间尺度 Sparkline 渲染（带坐标轴） ==========
+  function renderChartAxes(yaxisId, targetLineId, targetLabelId, currentMarkerId, values, unit="°", targetValue=null, currentValue=null){
+    // 移除ID中的#号（如果存在）
+    const cleanId = (id) => id ? id.replace(/^#/, '') : null;
+    const yaxis = $(cleanId(yaxisId));
+    const targetLine = $(cleanId(targetLineId));
+    const targetLabel = $(cleanId(targetLabelId));
+    const currentMarker = currentMarkerId ? $(cleanId(currentMarkerId)) : null;
+
+    if(values.length < 2){
+      if(yaxis) yaxis.innerHTML = "";
+      return;
+    }
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min;
+    const padding = range * 0.15;
+    const yMin = min - padding;
+    const yMax = max + padding;
+
+    // 设置 Y 轴标签（显示最大、最小、中间三个值）
+    if(yaxis){
+      const mid = (yMax + yMin) / 2;
+      yaxis.innerHTML = `<span>${r1(yMax)}${unit}</span><span>${r1(mid)}${unit}</span><span>${r1(yMin)}${unit}</span>`;
+    }
+
+    // 设置目标线位置
+    if(targetValue !== null && targetLine && targetLabel){
+      const pct = ((yMax - targetValue) / (yMax - yMin)) * 100;
+      targetLine.style.display = "";
+      targetLine.style.top = `${Math.max(0, Math.min(100, pct))}%`;
+      targetLabel.style.display = "";
+      targetLabel.textContent = `目标 ${r1(targetValue)}${unit}`;
+    }
+
+    // 设置当前值标记
+    if(currentValue !== null && currentMarker){
+      const pct = ((yMax - currentValue) / (yMax - yMin)) * 100;
+      currentMarker.style.display = "";
+      currentMarker.style.top = `${Math.max(0, Math.min(100, pct))}%`;
+    }
+  }
+
+  function renderDualSparkline(humidexArr, tempArr, setpointTemp){
+    const F = state.rooms[state.focusRoom];
+    const currentTemp = F.fusion.Tcombined;
+
+    // 温度实时视图 (Step 4)
+    const tempRealtime = getTrendSamples(tempArr.realtime, 30);
+    if(tempRealtime.length >= 2){
+      const spTempReal = sparkPath(tempRealtime, 300, 80, 4);
+      $("sparkTempPathRealtime4").setAttribute("d", spTempReal.line);
+      $("sparkTempAreaRealtime4").setAttribute("d", spTempReal.area);
+      renderChartAxes("#tempYAxisReal4", "#tempTargetReal4", "#tempTargetLabelReal4", "#tempCurrentMarker4", tempRealtime, "°C", setpointTemp, currentTemp);
+
+      // 更新箭头指示器
+      const arrowIndicator = $("tempArrowIndicator4");
+      const arrowIcon = $("tempArrowIcon4");
+      const arrowText = $("tempArrowText4");
+
+      const tempDiff = setpointTemp - currentTemp;
+      if(Math.abs(tempDiff) > 0.3){
+        arrowIndicator.style.display = "";
+        if(tempDiff > 0){
+          arrowIcon.textContent = "↑"; // 需要升温
+          arrowIcon.style.color = "var(--red)";
+          arrowText.textContent = `升温 ${r1(tempDiff)}° → ${r1(setpointTemp)}°`;
+        }else{
+          arrowIcon.textContent = "↓"; // 需要降温
+          arrowIcon.style.color = "var(--green)";
+          arrowText.textContent = `降温 ${r1(-tempDiff)}° → ${r1(setpointTemp)}°`;
+        }
+      }else{
+        arrowIndicator.style.display = "none";
+      }
+    }
+
+    // 温度趋势视图 (Step 4)
+    const tempTrend = getTrendSamples(tempArr.trend, 30);
+    if(tempTrend.length >= 2){
+      const spTempTrend = sparkPath(tempTrend, 300, 80, 4);
+      $("sparkTempPathTrend4").setAttribute("d", spTempTrend.line);
+      $("sparkTempAreaTrend4").setAttribute("d", spTempTrend.area);
+      renderChartAxes("#tempYAxisTrend4", "#tempTargetTrend4", "#tempTargetLabelTrend4", null, tempTrend, "°C", setpointTemp, null);
+
+      // 趋势图箭头指示器
+      const arrowTrend = $("tempArrowIndicatorTrend4");
+      const arrowIconTrend = $("tempArrowIconTrend4");
+      const arrowTextTrend = $("tempArrowTextTrend4");
+
+      const tempDiff = setpointTemp - currentTemp;
+      if(Math.abs(tempDiff) > 0.3){
+        arrowTrend.style.display = "";
+        if(tempDiff > 0){
+          arrowIconTrend.textContent = "↑";
+          arrowIconTrend.style.color = "var(--red)";
+          arrowTextTrend.textContent = `升温 ${r1(tempDiff)}° → ${r1(setpointTemp)}°`;
+        }else{
+          arrowIconTrend.textContent = "↓";
+          arrowIconTrend.style.color = "var(--green)";
+          arrowTextTrend.textContent = `降温 ${r1(-tempDiff)}° → ${r1(setpointTemp)}°`;
+        }
+      }else{
+        arrowTrend.style.display = "none";
+      }
+    }
+  }
+
+  // ========== 新增：更新卡通形象和状态徽章 ==========
+  function updateAvatarAndBadges(){
+    const F = state.rooms[state.focusRoom];
+    if(!F || !F.feel || !F.feel.status) {
+      // 如果房间无人或数据不完整，隐藏老人
+      const avatarSection = $("avatarSection");
+      if(avatarSection) avatarSection.style.display = "none";
+      return;
+    }
+    
+    // 检查是否有人，无人则不显示老人
+    if(!F.occ || !F.occ.occupied){
+      const avatarSection = $("avatarSection");
+      if(avatarSection) avatarSection.style.display = "none";
+      return;
+    }
+    
+    // 有人：显示老人
+    const avatarSection = $("avatarSection");
+    if(avatarSection) avatarSection.style.display = "";
+    
+    const level = F.feel.status.level;
+    const hx = F.feel.hx;
+
+    // 确定卡通状态
+    let avatarState = "comfortable";
+    if(level === "ok") avatarState = "comfortable";
+    else if(level === "warn") avatarState = hx < 32 ? "warm" : "hot";
+    else if(level === "bad") avatarState = hx < 28 ? "cold" : (hx < 38 ? "hot" : "danger");
+
+    // 更新卡通形象
+    const avatarSvg = $("avatarSvg");
+    if(avatarSvg) avatarSvg.innerHTML = getAvatarSVG(avatarState, hx);
+
+    // 更新状态文本
+    $("avatarStatus").textContent = F.feel.status.label;
+    $("avatarDesc").textContent = `Humidex: ${r1(hx)} · ${F.met.desc}`;
+    $("avatarRoomName").textContent = roomName(state.focusRoom);
+
+    // 更新状态类
+    const section = $("avatarSection");
+    section.className = "avatar-section";
+    section.classList.add(`status-${avatarState}`);
+
+    // 动态更新提示信息，显示 AI 决策过程（包含预测性控制）
+    const currentTemp = F.fusion.Tcombined;
+    const setpointTemp = F.ctrl.setpoint;
+    const tempDiff = setpointTemp - currentTemp;
+    const predC = F.predComfort || { needPreControl: false, trend: 0, label: "" };
+
+    let hint = "";
+    if(predC.needPreControl){
+      // 预测性控制模式
+      if(predC.trend > 0){
+        hint = `🔮 预测性控制：检测到温度上升趋势，预测会${predC.label}，提前降温 ${r1(-tempDiff)}° → ${r1(setpointTemp)}°C 避免未来不适！`;
+      }else{
+        hint = `🔮 预测性控制：检测到温度下降趋势，预测会寒冷，提前升温 ${r1(tempDiff)}° → ${r1(setpointTemp)}°C 避免未来不适！`;
+      }
+    }else if(avatarState === "comfortable"){
+      hint = "✅ 当前温度适宜，老人处于舒适状态。AI 将持续监控环境变化。";
+    }else if(Math.abs(tempDiff) > 0.3){
+      if(tempDiff > 0){
+        hint = `🔥 老人感到${avatarState === "cold" ? "寒冷" : "闷热"}，AI 正在升温 ${r1(tempDiff)}° → ${r1(setpointTemp)}°C 以达到舒适状态。`;
+      }else{
+        hint = `🔥 老人感到${avatarState === "cold" ? "寒冷" : "闷热"}，AI 正在降温 ${r1(-tempDiff)}° → ${r1(setpointTemp)}°C 以达到舒适状态。`;
+      }
+    }else{
+      hint = `⏳ AI 已调整温度至 ${r1(setpointTemp)}°C，等待环境响应中...`;
+    }
+    $("avatarHint").textContent = hint;
+
+    // 更新房间状态徽章（确保所有有人的房间都显示老人状态）
+    ["bedroom","living","bathroom"].forEach(roomKey=>{
+      const R = state.rooms[roomKey];
+      if(!R || !R.feel || !R.feel.status) return;
+      
+      const roomId = roomKey==="bedroom"?"room_bed":roomKey==="living"?"room_liv":"room_bath";
+      
+      // 笑脸已删除，不再更新badge
+
+      // 更新房间背景过渡
+      const roomEl = $(roomId);
+      if(roomEl) roomEl.style.background = roomBgByHumidex(R.feel.hx);
+      
+      // 如果房间有人，确保显示老人状态
+      if(R.occ && R.occ.occupied){
+        // 房间有人时，背景颜色应该反映舒适度
+        const roomBg = roomBgByHumidex(R.feel.hx);
+        if(roomEl) roomEl.style.background = roomBg;
+      }
+    });
+  }
+
+  // ========== 新增：帮助面板控制 ==========
+  function initHelpPanel(){
+    let isOpen = true; // 默认展开
+    const panel = $("helpPanel");
+    const toggle = $("helpToggle");
+    const close = $("helpClose");
+
+    if(!panel || !toggle || !close) {
+      console.warn("帮助面板元素未找到，跳过初始化");
+      return;
+    }
+
+    // 确保初始状态正确
+    panel.classList.remove("collapsed");
+    toggle.textContent = "×";
+    toggle.title = "关闭帮助";
+
+    // 切换按钮事件
+    if(toggle) {
+      toggle.addEventListener("click", (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+      isOpen = !isOpen;
+          if(panel) {
+            if(isOpen) {
+              panel.classList.remove("collapsed");
+            } else {
+              panel.classList.add("collapsed");
+            }
+          }
+          if(toggle) {
+      toggle.textContent = isOpen ? "×" : "?";
+      toggle.title = isOpen ? "关闭帮助" : "打开帮助";
+          }
+        } catch(err) {
+          console.error("切换帮助面板时出错:", err);
+        }
+      });
+    }
+
+    // 关闭按钮事件
+    if(close) {
+      close.addEventListener("click", (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+      isOpen = false;
+          if(panel) panel.classList.add("collapsed");
+          if(toggle) {
+      toggle.textContent = "?";
+      toggle.title = "打开帮助";
+          }
+        } catch(err) {
+          console.error("关闭帮助面板时出错:", err);
+        }
+    });
+    }
+  }
+
+  // ========== 新增：术语高亮和 Tooltip ==========
+  const glossaryData = {
+    "Humidex": { title: "闷热指数", desc: "结合温度和湿度判断人体真实感受，值越高越闷热。 <29°C为舒适" },
+    "met": { title: "代谢率", desc: "表示活动强度。睡眠约1.0，静坐约1.2，走动约2.0" },
+    "防抖": { title: "防抖机制", desc: "避免设备频繁开关，包括：死区、保持时间、限速" },
+    "融合温度": { title: "融合温度", desc: "多个传感器数据按可信度加权平均，更准确可靠" },
+    "Holt": { title: "Holt预测", desc: "时间序列算法，用历史数据预测未来温度趋势" },
+    "占用概率": { title: "占用概率", desc: "基于毫米波+PIR+门磁判断房间是否有人，0-100%" }
+  };
+
+  let activeTooltip = null;
+
+  function initTooltips(){
+    // 创建 tooltip 元素
+    const tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    tooltip.id = "glossaryTooltip";
+    tooltip.innerHTML = `<div class="tooltip-title"></div><div class="tooltip-desc"></div>`;
+    document.body.appendChild(tooltip);
+    activeTooltip = tooltip;
+
+    // 查找所有术语并添加高亮
+    const terms = Object.keys(glossaryData);
+    const walkText = (node)=>{
+      if(node.nodeType === 3){ // 文本节点
+        let text = node.textContent;
+        terms.forEach(term=>{
+          if(text.includes(term)){
+            const regex = new RegExp(`(${term})`, "g");
+            if(regex.test(text)){
+              const span = document.createElement("span");
+              span.className = "glossary-term-highlight";
+              span.textContent = term;
+              span.dataset.term = term;
+
+              const frag = text.split(regex);
+              const newNodes = frag.map(part=>{
+                if(part === term){
+                  const clone = span.cloneNode(true);
+                  return clone;
+                }
+                return document.createTextNode(part);
+              });
+
+              const parent = node.parentNode;
+              newNodes.forEach(n => parent.insertBefore(n, node));
+              parent.removeChild(node);
+              return true;
+            }
+          }
+        });
+      }else if(node.nodeType === 1 && !node.classList.contains("glossary-term-highlight")){
+        Array.from(node.childNodes).forEach((child, i)=>{
+          if(walkText(child)) return false;
+        });
+      }
+      return false;
+    };
+
+    // 只处理特定的容器（更新后的 ID）
+    ["bubble1","bubble2","bubble3","bubble4","bubble5","bubble6"].forEach(id=>{
+      const el = $(id);
+      if(el) walkText(el);
+    });
+
+    // 添加事件监听
+    document.querySelectorAll(".glossary-term-highlight").forEach(el=>{
+      el.addEventListener("mouseenter", (e)=>{
+        const term = e.target.dataset.term;
+        const data = glossaryData[term];
+        if(data){
+          tooltip.querySelector(".tooltip-title").textContent = data.title;
+          tooltip.querySelector(".tooltip-desc").textContent = data.desc;
+          tooltip.classList.add("visible");
+
+          const rect = e.target.getBoundingClientRect();
+          tooltip.style.left = rect.left + "px";
+          tooltip.style.top = (rect.bottom + 8) + "px";
+        }
+      });
+
+      el.addEventListener("mouseleave", ()=>{
+        tooltip.classList.remove("visible");
+      });
+    });
+  }
+
+  // ========== 新增：更新 Step 完成/活跃状态 ==========
+  function updateStepStates(){
+    const activeStep = state.activeStep;
+    // 更新step按钮状态
+    document.querySelectorAll(".step").forEach((el, idx)=>{
+      const step = parseInt(el.dataset.step, 10);
+      el.classList.remove("active", "completed", "pulsing");
+
+      if(step === activeStep){
+        el.classList.add("active", "pulsing");
+      }else if(step < activeStep){
+        el.classList.add("completed");
+      }
+    });
+    // 更新卡片显示/隐藏（统一在这里处理，避免重复）
+    for(let i=1;i<=6;i++){
+      const cardEl = $("card"+i);
+      if(cardEl){
+        cardEl.classList.toggle("hide", i!==activeStep);
+      }
+    }
+  }
+
+  // ===== Dew point / vapor pressure / Humidex (internal) =====
+  function dewPointC(T, RH){
+    // RH in %
+    const a = 17.62, b = 243.12;
+    const gamma = (a*T)/(b+T) + Math.log(RH/100);
+    return (b*gamma)/(a-gamma);
+  }
+  function vaporPressureFromDewPoint(Td){
+    return 6.11 * Math.exp(5417.7530*(1/273.16 - 1/(Td+273.15)));
+  }
+  function humidex(T, RH){
+    const Td = dewPointC(T, RH);
+    const e  = vaporPressureFromDewPoint(Td);
+    return { Hx: T + (5/9)*(e - 10), Td, e };
+  }
+  function comfortFromHumidex(hx){
+    if (hx < 29) return {label:"舒适", level:"ok"};
+    if (hx < 35) return {label:"略闷热", level:"warn"};
+    if (hx < 40) return {label:"闷热不适", level:"bad"};
+    return {label:"高风险热不适", level:"bad"};
+  }
+
+  // ===== Holt (EMA+trend) =====
+  function holtUpdate(model, x, alpha=0.35, beta=0.18){
+    if (!model.init){ model.level=x; model.trend=0; model.init=true; return model; }
+    const prevLevel=model.level;
+    model.level = alpha*x + (1-alpha)*(model.level + model.trend);
+    model.trend = beta*(model.level - prevLevel) + (1-beta)*model.trend;
+    return model;
+  }
+  function holtForecast(model, steps){
+    if(!model.init) return null;
+    return model.level + steps*model.trend;
+  }
+
+  // ===== Radar feature mapping =====
+  function radarFeatures(mode){
+    if(mode==="idle")  return {presence:0, micro:0,    breath:0, activity:0.00, posture:"none"};
+    if(mode==="sleep") return {presence:1, micro:0.35, breath:1, activity:0.05, posture:"lying"};
+    if(mode==="sit")   return {presence:1, micro:0.55, breath:1, activity:0.25, posture:"sitting"};
+    if(mode==="walk")  return {presence:1, micro:0.85, breath:1, activity:0.75, posture:"standing"};
+    return {presence:0, micro:0, breath:0, activity:0, posture:"none"};
+  }
+
+  function dotClass(level){
+    if(level==="ok") return "green";
+    if(level==="warn") return "orange";
+    return "red";
+  }
+
+  function roomBgByHumidex(hx){
+    if(hx < 29) return "linear-gradient(135deg, rgba(52,199,89,.16), rgba(10,132,255,.10))";
+    if(hx < 35) return "linear-gradient(135deg, rgba(255,159,10,.16), rgba(10,132,255,.08))";
+    if(hx < 40) return "linear-gradient(135deg, rgba(255,59,48,.18), rgba(255,159,10,.10))";
+    return "linear-gradient(135deg, rgba(255,59,48,.22), rgba(255,59,48,.10))";
+  }
+
+  // ===== State =====
+  const state = {
+    tick:0,
+    auto:false,
+    autoStepRunning:false, // 是否正在执行Step顺序
+    autoStepCurrent:0, // 当前执行的Step（0表示未开始）
+    focusRoom:"bedroom",
+    activeStep:1,
+    hour:21,
+    rh:55,
+    overrideOn:false,
+    overrideTemp:25.5,
+    anomalyOnce:false,
+    predictiveControl:true, // 预测性控制开关（默认开启）
+
+    cfg:{
+      // occupancy weights
+      occW:{ b0:-1.2, radarPresence:2.2, microMotion:1.4, pirMotion:1.2, breathingValid:1.0, doorOpen:0.35 },
+      occOn:0.70, occOff:0.30,
+
+      outlierZ:2.8,
+      batteryLow:0.25,
+
+      holdSeconds:180,
+      rampPerStep:0.2,
+      hxDeadband:0.6,
+      ecoWiden:2.0,
+    },
+
+    pref: Array.from({length:24}, ()=>({sum:0,count:0,avg:null})),
+
+    rooms:{
+      bedroom: makeRoom(25.0, {window:+0.6, outlet:-0.8}, "sleep", 0.05),
+      living:  makeRoom(24.5, {window:+0.3, outlet:-0.6}, "idle",  0.02),
+      bathroom:makeRoom(28.0, {window:+0.1, outlet:-0.4}, "idle",  0.12)
+    }
+  };
+
+  function makeRoom(baseT, offsets, radarMode, fallInit){
+    return {
+      baseT,
+      offsets,
+      sensor:{
+        bedside:{battery:0.95, dropout:false, noise:0.08, ema:{init:false,level:0,trend:0}},
+        window:{battery:0.88, dropout:false, noise:0.12, ema:{init:false,level:0,trend:0}},
+        outlet:{battery:0.92, dropout:false, noise:0.10, ema:{init:false,level:0,trend:0}},
+      },
+      doorOpen:false,
+      pir:0,
+      radarMode,
+      fallRiskNow: fallInit,
+
+      occ:{p:0, occupied:false},
+      met:{value:1.2, desc:"—"},
+      fusion:{Tbed:0,Twin:0,Tout:0, W:{bed:0,win:0,out:0}, score:{bed:0,win:0,out:0}, Tcombined:0},
+      feel:{hx:0, Td:0, e:0, status:{label:"—",level:"ok"}},
+      pred:{model:{init:false,level:0,trend:0}, next15:null},
+      ctrl:{setpoint:baseT, wind:"low", mode:"maintain", lastChangeTick:-999999, note:"—"},
+      hist:{temp:[], humidex:[], occ:[]},
+      _scoreDetails:null,
+      _radar:null,
+    };
+  }
+
+  // ===== Sensor reliability scoring & fusion =====
+  function sensorScore(meta, observed){
+    const b=meta.battery;
+    let fb=1.0;
+    if(b < state.cfg.batteryLow) fb=0.55;
+    else if(b < 0.45) fb=0.75;
+
+    const fd = meta.dropout ? 0.05 : 1.0;
+
+    holtUpdate(meta.ema, observed, 0.30, 0.12);
+    const pred = holtForecast(meta.ema, 1);
+    const err = (pred===null) ? 0 : Math.abs(observed - pred);
+
+    let fs=1.0;
+    if(err > 1.2) fs=0.50;
+    else if(err > 0.6) fs=0.75;
+    else if(err > 0.3) fs=0.90;
+
+    const noise = Math.max(meta.noise, 0.05);
+    const z = err / noise;
+    let fo=1.0;
+    if(z > state.cfg.outlierZ) fo=0.35;
+
+    const score = clamp(fb*fd*fs*fo, 0.02, 1.0);
+    return {score, fb, fd, fs, fo, err:r2(err), z:r2(z), pred: pred===null?null:r2(pred)};
+  }
+
+  function computeFusion(roomKey){
+    const R = state.rooms[roomKey];
+    const randN = ()=> (Math.random()*2-1);
+
+    let bedObs = R.baseT + randN()*R.sensor.bedside.noise;
+    let winObs = R.baseT + R.offsets.window + randN()*R.sensor.window.noise;
+    let outObs = R.baseT + R.offsets.outlet + randN()*R.sensor.outlet.noise;
+
+    if(state.anomalyOnce && roomKey===state.focusRoom){
+      R.sensor.window.dropout = true;
+    }
+
+    const sBed=sensorScore(R.sensor.bedside, bedObs);
+    const sWin=sensorScore(R.sensor.window,  winObs);
+    const sOut=sensorScore(R.sensor.outlet,  outObs);
+
+    const sum=sBed.score+sWin.score+sOut.score;
+    const Wbed=sBed.score/sum, Wwin=sWin.score/sum, Wout=sOut.score/sum;
+
+    const Tcombined = bedObs*Wbed + winObs*Wwin + outObs*Wout;
+
+    R.fusion.Tbed=r1(bedObs); R.fusion.Twin=r1(winObs); R.fusion.Tout=r1(outObs);
+    R.fusion.score={bed:r2(sBed.score), win:r2(sWin.score), out:r2(sOut.score)};
+    R.fusion.W={bed:r2(Wbed), win:r2(Wwin), out:r2(Wout)};
+    R.fusion.Tcombined=r1(Tcombined);
+
+    R._scoreDetails={sBed,sWin,sOut};
+
+    if(state.anomalyOnce && roomKey===state.focusRoom){
+      R.sensor.window.dropout = false; // recover next tick
+    }
+  }
+
+  // ===== Occupancy & met =====
+  function computeOccupancy(roomKey){
+    const R = state.rooms[roomKey];
+    const w = state.cfg.occW;
+    const rf = radarFeatures(R.radarMode);
+
+    const z = w.b0
+      + w.radarPresence * rf.presence
+      + w.microMotion   * rf.micro
+      + w.pirMotion     * (R.pir ? 1 : 0)
+      + w.breathingValid* rf.breath
+      + w.doorOpen      * (R.doorOpen ? 1 : 0);
+
+    const p = sigmoid(z);
+
+    let occupied = R.occ.occupied;
+    if(!occupied && p > state.cfg.occOn) occupied = true;
+    else if(occupied && p < state.cfg.occOff) occupied = false;
+
+    R.occ.p = p;
+    R.occ.occupied = occupied;
+
+    // Met mapping
+    let met = 1.1 + 1.2*rf.activity;
+    if(rf.posture==="lying") met = 1.0 + 0.6*rf.activity;
+    if(rf.posture==="sitting") met = 1.2 + 0.8*rf.activity;
+    if(rf.posture==="standing") met = 1.4 + 1.2*rf.activity;
+    R.met.value = r2(clamp(met, 1.0, 2.8));
+    R.met.desc = rf.posture==="lying" ? "睡/躺" : (rf.posture==="sitting" ? "静坐" : (rf.posture==="standing" ? "走动" : "无人"));
+    R._radar = rf;
+  }
+
+  // ===== Comfort =====
+  function computeComfort(roomKey){
+    const R = state.rooms[roomKey];
+    const {Hx, Td, e} = humidex(R.fusion.Tcombined, state.rh);
+    R.feel.hx=r1(Hx);
+    R.feel.Td=r1(Td);
+    R.feel.e=r1(e);
+    R.feel.status = comfortFromHumidex(R.feel.hx);
+  }
+
+  // ===== Prediction =====
+  function computePrediction(roomKey){
+    const R = state.rooms[roomKey];
+    holtUpdate(R.pred.model, R.fusion.Tcombined, 0.35, 0.18);
+    const steps = 90; // demo mapping: 1 tick ~= 10s, 15min ~= 90 ticks
+    R.pred.next15 = r1(holtForecast(R.pred.model, steps));
+  }
+
+  // ===== Control =====
+  function computeControl(roomKey){
+    const R = state.rooms[roomKey];
+    const occupied = R.occ.occupied;
+    const isBath = roomKey==="bathroom";
+
+    // target humidex center, adjusted by met (higher met => cooler target)
+    let targetHx = 28.0;
+    targetHx -= clamp((R.met.value - 1.2) * 1.3, 0, 2.0);
+
+    const widen = occupied ? 0 : state.cfg.ecoWiden;
+    const bandLow = targetHx - (1.0 + widen);
+    const bandHigh = targetHx + (1.0 + widen);
+
+    const hx = R.feel.hx;
+    const db = state.cfg.hxDeadband;
+
+    let desiredDelta = 0.0;
+    if(hx > bandHigh + db) desiredDelta = -0.5 * (hx - (bandHigh + db));
+    else if(hx < bandLow - db) desiredDelta = +0.5 * ((bandLow - db) - hx);
+    desiredDelta = clamp(desiredDelta, -2.0, +2.0);
+
+    let proposed = R.fusion.Tcombined + desiredDelta;
+
+    // preference blend if exists & occupied
+    const pref = state.pref[state.hour].avg;
+    if(occupied && pref!==null){
+      proposed = 0.75*proposed + 0.25*pref;
+    }
+
+    let mode="maintain", wind="low", note="保持";
+    if(state.overrideOn){
+      R.ctrl.mode="manual";
+      R.ctrl.wind=wind;
+      R.ctrl.note="手动覆盖：系统仅解释";
+      R.ctrl.setpoint=r1(state.overrideTemp);
+      return;
+    }
+
+    if(isBath && R.fallRiskNow > 0.7){
+      mode="safety"; wind="mid";
+      note="高跌倒风险：安全优先（减少频繁环境变化）";
+      R.ctrl.mode=mode; R.ctrl.wind=wind; R.ctrl.note=note;
+      return;
+    }
+
+    if(occupied){
+      if(hx > bandHigh + db){mode="cool"; note="体感偏热：降温/除湿";}
+      else if(hx < bandLow - db){mode="heat"; note="体感偏冷：微升温";}
+    }else{
+      mode="eco"; note="无人：节能（放宽舒适带）";
+    }
+
+    const absErr = Math.abs(hx - targetHx);
+    if(absErr < 1.2) wind="low";
+    else if(absErr < 3.0) wind="mid";
+    else wind="high";
+
+    const since = state.tick - R.ctrl.lastChangeTick;
+    const holdTicks = Math.round(state.cfg.holdSeconds / 10);
+    const canChange = since >= holdTicks;
+
+    if(!canChange){
+      R.ctrl.mode=mode; R.ctrl.wind=wind;
+      R.ctrl.note=`保持时间内不频繁调节（剩余约 ${Math.max(0, holdTicks - since)} 步）｜${note}`;
+      return;
+    }
+
+    const ramp = state.cfg.rampPerStep;
+    let next = R.ctrl.setpoint;
+    const diff = proposed - next;
+    if(Math.abs(diff) <= ramp) next = proposed;
+    else next = next + Math.sign(diff)*ramp;
+
+    const minT = isBath ? 23 : 18;
+    const maxT = isBath ? 30 : 28;
+    next = clamp(next, minT, maxT);
+    
+    // 确保目标温度对应的Humidex < 29（舒适），特别是对于有人的房间
+    if(occupied){
+      let nextHxResult = humidex(next, state.rh);
+      if(nextHxResult.Hx >= 29){
+        // 如果Humidex >= 29，需要降低温度直到 < 29
+        let adjustedNext = next;
+        let attempts = 0;
+        while(nextHxResult.Hx >= 29 && adjustedNext > minT && attempts < 20){
+          adjustedNext -= 0.2;
+          nextHxResult = humidex(adjustedNext, state.rh);
+          if(nextHxResult.Hx < 29){
+            next = adjustedNext;
+            break;
+          }
+          attempts++;
+        }
+        // 如果调整后仍不舒适，至少确保在合理范围内
+        nextHxResult = humidex(next, state.rh);
+        if(nextHxResult.Hx >= 29){
+          // 强制降低到确保舒适的温度
+          next = Math.max(minT, next - 1.0);
+          nextHxResult = humidex(next, state.rh);
+          // 如果还是不行，继续降低
+          if(nextHxResult.Hx >= 29){
+            next = Math.max(minT, next - 0.5);
+          }
+        }
+      }
+    }
+
+    if(Math.abs(next - R.ctrl.setpoint) >= 0.05){
+      R.ctrl.lastChangeTick = state.tick;
+    }
+
+    R.ctrl.setpoint=r1(next);
+    R.ctrl.mode=mode;
+    R.ctrl.wind=wind;
+    R.ctrl.note= note + (pref!==null && occupied ? `｜偏好融合：${r1(pref)}°C` : "");
+  }
+
+  // ===== Safety summary =====
+  function computeSafety(){
+    const B = state.rooms.bathroom;
+    const fr = B.fallRiskNow;
+    let level="低", hint="常规监测。";
+    if(fr>0.7){level="高"; hint="建议：开夜灯、语音确认、通知家属/护理；尽量减少频繁环境变化。";}
+    else if(fr>0.35){level="中"; hint="建议：保持照明、地面防滑提醒；环境调节更平滑。";}
+    return {level, hint};
+  }
+
+  // ===== History / sparkline =====
+  function pushHist(arr, v, max=30){
+    arr.push(v);
+    if(arr.length>max) arr.shift();
+  }
+  function sparkPath(values, w=300, h=60, pad=6){
+    if(!values || values.length<2) return {line:"", area:""};
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = (max-min) < 1e-6 ? 1 : (max-min);
+    const sx = (i)=> (i/(values.length-1))*(w-2*pad)+pad;
+    const sy = (v)=> (h-pad) - ((v-min)/span)*(h-2*pad);
+    let d = "";
+    values.forEach((v,i)=>{
+      const x=sx(i), y=sy(v);
+      d += (i===0?`M ${x} ${y}`:` L ${x} ${y}`);
+    });
+    // area
+    const lastX = sx(values.length-1);
+    const firstX = sx(0);
+    const baseY = h-pad;
+    const area = `${d} L ${lastX} ${baseY} L ${firstX} ${baseY} Z`;
+    return {line:d, area};
+  }
+
+  // ===== Render floor =====
+  function renderFloor(){
+    const Rb=state.rooms.bedroom, Rl=state.rooms.living, Rt=state.rooms.bathroom;
+    if(!Rb || !Rl || !Rt) return;
+
+    $("bedTemp").textContent = `${r1(Rb.fusion.Tcombined)}°`;
+    $("livTemp").textContent = `${r1(Rl.fusion.Tcombined)}°`;
+    $("bathTemp").textContent = `${r1(Rt.fusion.Tcombined)}°`;
+
+    $("bedHum").textContent = `RH ${state.rh}% · Humidex ${r1(Rb.feel.hx)}`;
+    $("livHum").textContent = `RH ${state.rh}% · Humidex ${r1(Rl.feel.hx)}`;
+    $("bathHum").textContent = `RH ${state.rh}% · Humidex ${r1(Rt.feel.hx)}`;
+
+    const bedLine = $("bedLine");
+    const livLine = $("livLine");
+    const bathLine = $("bathLine");
+    
+    if(bedLine && Rb.feel && Rb.feel.status) bedLine.textContent = `舒适状态：${Rb.feel.status.label} · met ${Rb.met.value}（${Rb.met.desc}）`;
+    if(livLine && Rl.feel && Rl.feel.status) livLine.textContent = `舒适状态：${Rl.feel.status.label} · met ${Rl.met.value}（${Rl.met.desc}）`;
+    if(bathLine && Rt.feel && Rt.feel.status) bathLine.textContent = `舒适状态：${Rt.feel.status.label} · met ${Rt.met.value}（${Rt.met.desc}）`;
+
+    $("bedOcc").textContent = `占用 ${pct(Rb.occ.p)}`;
+    $("livOcc").textContent = `占用 ${pct(Rl.occ.p)}`;
+    $("bathOcc").textContent = `占用 ${pct(Rt.occ.p)}`;
+
+    const bedDot = $("bedDot");
+    const livDot = $("livDot");
+    const bathDot = $("bathDot");
+    
+    if(bedDot && Rb.feel && Rb.feel.status) bedDot.className = "dot " + (Rb.occ.occupied ? dotClass(Rb.feel.status.level) : "");
+    if(livDot && Rl.feel && Rl.feel.status) livDot.className = "dot " + (Rl.occ.occupied ? dotClass(Rl.feel.status.level) : "");
+    if(bathDot && Rt.feel && Rt.feel.status) bathDot.className = "dot " + (Rt.occ.occupied ? dotClass(Rt.feel.status.level) : "");
+
+    $("room_bed").style.background = roomBgByHumidex(Rb.feel.hx);
+    $("room_liv").style.background = roomBgByHumidex(Rl.feel.hx);
+    $("room_bath").style.background = roomBgByHumidex(Rt.feel.hx);
+
+    // person = max p
+    const entries = [
+      ["bedroom", Rb.occ.p, $("room_bed")],
+      ["living", Rl.occ.p, $("room_liv")],
+      ["bathroom", Rt.occ.p, $("room_bath")]
+    ].sort((a,b)=>b[1]-a[1]);
+
+    const best = entries[0];
+    const rect = best[2].getBoundingClientRect();
+    const planRect = $("plan").getBoundingClientRect();
+    const x = (rect.left - planRect.left) + rect.width*0.72;
+    const y = (rect.top - planRect.top) + rect.height*0.28;
+    $("person").style.transform = `translate(${x}px, ${y}px)`;
+
+    // glow follows focus room
+    const focusEl = state.focusRoom==="bedroom" ? $("room_bed") : (state.focusRoom==="living" ? $("room_liv") : $("room_bath"));
+    const fr = focusEl.getBoundingClientRect();
+    const pr = $("plan").getBoundingClientRect();
+    const gx = ((fr.left - pr.left) + fr.width*0.35)/pr.width * 100;
+    const gy = ((fr.top - pr.top) + fr.height*0.35)/pr.height * 100;
+    $("glow").style.setProperty("--gx", `${gx}%`);
+    $("glow").style.setProperty("--gy", `${gy}%`);
+
+    // execution summary (focus room)
+    const F = state.rooms[state.focusRoom];
+    $("execRoom").textContent = roomName(state.focusRoom);
+    const modeText = F.ctrl.mode==="manual" ? "手动覆盖" :
+                     F.ctrl.mode==="eco" ? "节能" :
+                     F.ctrl.mode==="cool" ? "降温/除湿" :
+                     F.ctrl.mode==="heat" ? "升温" :
+                     F.ctrl.mode==="safety" ? "安全优先" : "保持";
+    $("execAction").textContent = `设定 ${F.ctrl.setpoint}°C · 风速 ${F.ctrl.wind} · ${modeText}｜${F.ctrl.note}`;
+
+    $("systemMode").textContent = state.overrideOn ? "系统模式：手动覆盖（仅解释）" : "系统模式：自动控制";
+
+    const safety = computeSafety();
+    $("safety").textContent = `跌倒风险 ${r2(state.rooms.bathroom.fallRiskNow)}（${safety.level}）`;
+    $("safetyHint").textContent = safety.hint;
+
+    $("focusRoomLabel").textContent = `当前聚焦：${roomName(state.focusRoom)}`;
+  }
+
+  // ===== Right decision panel render =====
+  function setTag(el, levelText){
+    if(el) el.textContent = levelText;
+  }
+
+  function renderDecision(){
+    const R = state.rooms[state.focusRoom];
+    if(!R) return;
+
+    // Timeline summaries - 更新为新的步骤顺序
+    const st1 = $("st1"); if(st1) st1.textContent = `p ${pct(R.occ.p)} · ${R.occ.occupied?"有人":"无人"}`;
+    const st2 = $("st2"); if(st2) st2.textContent = `T ${r1(R.fusion.Tcombined)}° · 融合完成`;
+    const st3 = $("st3"); if(st3) st3.textContent = `${R.feel.status.label} · Hx ${r1(R.feel.hx)}`;
+    const st4 = $("st4"); if(st4) st4.textContent = `15m → ${r1(R.pred.next15)}°`;
+    const st5 = $("st5"); if(st5) st5.textContent = `设定 ${R.ctrl.setpoint}°C · ${R.ctrl.mode}`;
+    const st6 = $("st6"); if(st6) st6.textContent = `执行 → 验证效果`;
+
+    // ========== Step 1: 占用证据 ==========
+    setTag($("tag1"), `占用：${R.occ.occupied?"有人":"无人"}`);
+    const kOcc1 = $("kOcc1"); if(kOcc1) kOcc1.textContent = pct(R.occ.p);
+    const kOccNote1 = $("kOccNote1"); if(kOccNote1) kOccNote1.textContent = `稳定状态：${R.occ.occupied?"有人（防抖后）":"无人（防抖后）"}`;
+    const kOccBar1 = $("kOccBar1"); if(kOccBar1) kOccBar1.style.width = `${Math.round(R.occ.p*100)}%`;
+
+    const rf = R._radar || radarFeatures("idle");
+    const bubble1 = $("bubble1");
+    if(bubble1){
+      bubble1.innerHTML =
+      `我用毫米波+PIR+门磁来判断"这里是否有人"。当前占用概率 <b>${pct(R.occ.p)}</b>，`+
+      `毫米波姿态=<b>${R.met.desc}</b>，micro_motion=${r2(rf.micro)}。`+
+      `为避免抖动，我使用"双阈值防抖"：p>0.7 才判有人，p<0.3 才判无人。`;
+    }
+
+    const w = state.cfg.occW;
+    const f1 = $("f1");
+    if(f1) f1.textContent =
+`占用概率（工程公式）：
+occupied_probability =
+  sigmoid(
+    b0
+  + w1 * radar_presence
+  + w2 * micro_motion
+  + w3 * pir_motion
+  + w4 * breathing_valid
+  + w5 * door_open
+  )
+
+防抖规则：
+if prev=无人 and p>0.7 → 有人
+if prev=有人 and p<0.3 → 无人
+
+（本原型权重为可调参数，可用真实标注数据拟合）`;
+
+    // ========== Step 2: 温度融合 ==========
+    setTag($("tag2"), `融合：T ${r1(R.fusion.Tcombined)}°C`);
+    $("bubble2").innerHTML =
+      `同一房间不同位置温度会不一样。我会给每个温度点打"可信度分"，再自动算权重。`+
+      `这样可以抵抗"窗边冷风/掉线/异常波动"等干扰。<br/><span class="tiny muted">提示：点击下面任意一行可高亮房间并记录日志。</span>`;
+
+    const list = $("sensorList");
+    list.innerHTML = "";
+    const rows = [
+      {key:"bed", name:"床头温度", T:R.fusion.Tbed, W:R.fusion.W.bed, S:R.fusion.score.bed, hint:"贴近人体，通常更稳定"},
+      {key:"win", name:"窗边温度", T:R.fusion.Twin, W:R.fusion.W.win, S:R.fusion.score.win, hint:"易受开窗/外界干扰"},
+      {key:"out", name:"出风口温度", T:R.fusion.Tout, W:R.fusion.W.out, S:R.fusion.score.out, hint:"受设备直吹影响"}
+    ];
+    rows.forEach(obj=>{
+      const div = document.createElement("div");
+      div.className = "li";
+      div.dataset.sensor = obj.key;
+      div.innerHTML = `
+        <div>
+          <div class="l1">${obj.name}</div>
+          <div class="l2">${obj.hint}｜score ${obj.S} → weight ${obj.W}</div>
+        </div>
+        <div class="right">${r1(obj.T)}°C</div>
+      `;
+      list.appendChild(div);
+    });
+
+    $("f2").textContent =
+`可信度到权重（工程公式）：
+sensor_score =
+  battery_factor * connection_factor * stability_factor * outlier_factor
+
+weight_i = sensor_score_i / (sum of all sensor_scores)
+
+combined_temperature =
+  weight_bedside * temperature_bedside
++ weight_window  * temperature_window
++ weight_outlet  * temperature_outlet`;
+
+    // ========== Step 3: 体感判断 ==========
+    const lvl = R.feel.status.level;
+    const lvlTxt = lvl==="ok"?"舒适":(lvl==="warn"?"略闷":"不适/风险");
+    setTag($("tag3"), `体感：${lvlTxt}`);
+
+    $("kHumidex3").textContent = `${r1(R.feel.hx)}`;
+    $("kHumNote3").textContent = `标签：${R.feel.status.label}｜露点 ${r1(R.feel.Td)}°C`;
+    $("kEnv3").textContent = `${r1(R.fusion.Tcombined)}°C`;
+    $("kEnvNote3").textContent = `RH ${state.rh}%｜met ${R.met.value}（${R.met.desc}）`;
+
+    $("bubble3").innerHTML =
+      `我先判断"老人是否感觉闷热"。当前 <b>Humidex = ${r1(R.feel.hx)}</b>（${R.feel.status.label}）。`+
+      `结合活动强度（met ${R.met.value}）后，我会把舒适目标略微调向"更凉/更暖"。`;
+
+    $("f3").textContent =
+`Humidex（概念）：
+humidex = temperature + humidity_adjustment
+
+（系统内部用露点/水汽压计算 humidity_adjustment）
+
+舒适标签（示例）：
+if humidex < 29 → 舒适
+29~34 → 略闷
+35~39 → 闷热不适
+>=40 → 高风险`;
+
+    // ========== Step 4: 趋势预测（预测性控制核心） ==========
+    // 计算预测的体感状态
+    const predTemp = R.pred.next15;
+    const predHxResult = humidex(predTemp, state.rh);
+    const predHx = r1(predHxResult.Hx);
+    const predComfort = comfortFromHumidex(predHx);
+    const currentHx = R.feel.hx;
+    const currentComfort = R.feel.status;
+
+    // 判断预测趋势
+    const hxTrend = predHx - currentHx;
+    let trendLabel = "";
+    let trendIcon = "";
+    let predControlHint = "";
+
+    if(hxTrend > 2){
+      trendLabel = "快速升温";
+      trendIcon = "🔥";
+      if(predComfort.level === "bad" || predComfort.level === "warn"){
+        predControlHint = `⚠️ 预测${hxTrend > 4 ? "约5-10" : "约10-15"}分钟后会${predComfort.label}，需要提前降温！`;
+      }else{
+        predControlHint = `温度正在上升，需要密切监控。`;
+      }
+    }else if(hxTrend < -2){
+      trendLabel = "快速降温";
+      trendIcon = "❄️";
+      if(predHx < 26){
+        predControlHint = `⚠️ 预测${Math.abs(hxTrend) > 4 ? "约5-10" : "约10-15"}分钟后会感到寒冷，需要提前升温！`;
+      }else{
+        predControlHint = `温度正在下降，需要密切监控。`;
+      }
+    }else{
+      trendLabel = "温度稳定";
+      trendIcon = "✓";
+      predControlHint = `温度趋势平稳，继续监控。`;
+    }
+
+    // 预测性控制：如果预测会不适，显示提前调节提示
+    const needPreControl =
+      (predComfort.level === "bad" && hxTrend > 1) ||
+      (predComfort.level === "warn" && hxTrend > 2) ||
+      (predHx < 26 && hxTrend < -2);
+
+    const preControlAction = needPreControl ?
+      (hxTrend > 0 ? `🔽 建议提前 ${hxTrend > 3 ? "1.5" : "1.0"}°C 降温` : `🔼 建议提前 ${Math.abs(hxTrend) > 3 ? "1.5" : "1.0"}°C 升温`) :
+      "✓ 无需提前干预";
+
+    const tag4 = $("tag4");
+    if(tag4){
+      if(state.predictiveControl){
+        setTag(tag4, needPreControl ? "⚠️ 需提前干预" : `预测：15m`);
+      }else{
+        setTag(tag4, needPreControl ? "⚠️ 预测到不适（但预测已关闭）" : `预测：15m`);
+      }
+    }
+    
+    const bubble4 = $("bubble4");
+    if(bubble4){
+      let predictiveStatus = "";
+      if(!state.predictiveControl && needPreControl){
+        predictiveStatus = `<br/><br/><span style="color:var(--red);font-weight:900;">❌ 预测性控制已关闭：系统不会提前调节，会等到不适发生才响应！</span>`;
+      }else if(state.predictiveControl && needPreControl){
+        predictiveStatus = `<br/><br/><span style="color:var(--green);font-weight:900;">✅ 预测性控制已开启：系统会提前调节，避免未来不适！</span>`;
+      }
+      
+      bubble4.innerHTML =
+      `我会看"温度趋势"，<b style="color:${needPreControl ? "var(--red)" : "var(--green)"}">${needPreControl ? "预测到未来不适，需要提前干预！" : "当前趋势平稳"}</b>。<br/><br/>`+
+      `📍 <b>当前</b>：温度 ${r1(R.fusion.Tcombined)}°C，Humidex ${r1(currentHx)}（${currentComfort.label}）<br/>`+
+      `🔮 <b>预测 15 分钟后</b>：温度 ${r1(predTemp)}°C，Humidex ${predHx}（${predComfort.label}）<br/>`+
+      `${trendIcon} 趋势：${trendLabel}（${hxTrend > 0 ? "+" : ""}${r1(hxTrend)}°）<br/><br/>`+
+        `<b style="font-size:11px;padding:6px 8px;background:rgba(${needPreControl ? "255,59,48" : "52,199,89"},.1);border-radius:8px;display:inline-block">${predControlHint}</b>`+
+        predictiveStatus;
+    }
+
+    $("kTnow4").textContent = `${r1(R.fusion.Tcombined)}°C`;
+    $("kTnowNote4").textContent = `当前 Humidex: ${r1(currentHx)}（${currentComfort.label}）`;
+    $("kPred4").textContent = `${r1(predTemp)}°C`;
+    $("kPredNote4").textContent = `预测 Humidex: ${predHx}（${predComfort.label}）`;
+
+    // 保存预测结果供Step 5使用
+    R.predComfort = {
+      hx: predHx,
+      label: predComfort.label,
+      level: predComfort.level,
+      trend: hxTrend,
+      needPreControl: needPreControl
+    };
+
+    $("f4").textContent =
+`Holt 预测（工程描述）：
+level_t  = alpha*x_t + (1-alpha)*(level_{t-1}+trend_{t-1})
+trend_t  = beta*(level_t - level_{t-1}) + (1-beta)*trend_{t-1}
+forecast(m steps) = level_t + m*trend_t
+
+预测性控制逻辑：
+1. 计算预测温度的 Humidex
+2. 判断预测体感状态（舒适/略闷/闷热/寒冷）
+3. 如果预测状态比当前状态差：
+   - 提前计算调节量 = 预测偏差 × 预测权重
+   - 预测权重随时间接近而增加（越近越重视）
+4. 融合当前控制 + 预测控制 = 最终动作`;
+
+    // ========== Step 5: AI 计算动作（融合当前 + 预测的预测性控制） ==========
+    const mode = R.ctrl.mode;
+    const modeLabel = mode==="manual"?"手动覆盖":(mode==="eco"?"节能":(mode==="cool"?"降温/除湿":(mode==="heat"?"升温":(mode==="safety"?"安全优先":"保持"))));
+    setTag($("tag5"), `动作：${modeLabel}`);
+
+    $("kSetpoint5").textContent = `${r1(R.ctrl.setpoint)}°C`;
+    $("kSetNote5").textContent = state.overrideOn ? "用户覆盖：系统不自动改" : R.ctrl.note;
+    $("kWind5").textContent = `${R.ctrl.wind}`;
+    $("kWindNote5").textContent = `模式：${modeLabel}`;
+
+    const pref = state.pref[state.hour].avg;
+    const prefText = pref===null ? "暂无偏好样本" : `该小时偏好均值 ${r1(pref)}°C`;
+
+    // ========== 预测性控制核心逻辑 ==========
+    // 获取Step 4计算的预测结果
+    const predC = R.predComfort || { hx: R.feel.hx, level: "ok", trend: 0, needPreControl: false };
+
+    // 计算目标Humidex
+    const targetHx = 28.0 - clamp((R.met.value - 1.2) * 1.3, 0, 2.0);
+
+    // 1. 基于当前状态的控制量（使用 Step 4 中已计算的 currentHx）
+    const currentHxDev = R.feel.hx - targetHx;
+    const currentTempAdj = clamp(-0.5 * currentHxDev, -2, 2);
+
+    // 2. 基于预测状态的控制量（预测性控制）
+    let predTempAdj = 0;
+    let predControlReason = "";
+    const predHxDev = predC.hx - targetHx;
+
+    if(predC.needPreControl){
+      // 预测到会不适，提前调节
+      // 预测权重：趋势越强，权重越高
+      const predWeight = clamp(Math.abs(predC.trend) / 5, 0.3, 0.8);
+      predTempAdj = clamp(-0.6 * predHxDev, -2, 2) * predWeight;
+
+      if(predC.trend > 0){
+        predControlReason = `预测${predC.trend > 3 ? "快速" : ""}升温会${predC.label}，提前${predTempAdj < 0 ? "降温" : "升温"}`;
+      }else{
+        predControlReason = `预测快速降温会寒冷，提前升温`;
+      }
+    }
+
+    // 3. 融合当前控制 + 预测控制
+    // 根据预测性控制开关决定是否使用预测
+    let fusionWeight, predWeight, finalTempAdj;
+    if(state.predictiveControl && predC.needPreControl){
+      // 预测性控制模式：提高预测权重
+      fusionWeight = 0.4; // 当前状态权重降为0.4
+      predWeight = 0.6;   // 预测权重提高到0.6
+    const fusedTempAdj = fusionWeight * currentTempAdj + predWeight * predTempAdj;
+      finalTempAdj = clamp(fusedTempAdj, -2, 2);
+    }else{
+      // 仅响应式控制模式：只看当前状态，忽略预测
+      fusionWeight = 1.0;
+      predWeight = 0.0;
+      finalTempAdj = currentTempAdj;
+    }
+
+    const proposed = R.fusion.Tcombined + finalTempAdj;
+    const afterPref = pref!==null ? (0.75*proposed + 0.25*pref) : proposed;
+
+    // AI 计算过程可视化（显示预测性控制的影响）
+    const aiStep1 = $("aiStep1");
+    const aiStep2 = $("aiStep2");
+    const aiStep3 = $("aiStep3");
+    const aiStep4 = $("aiStep4");
+    const aiStep5 = $("aiStep5");
+    
+    if(aiStep1) aiStep1.textContent = `当前 Hx=${r1(R.feel.hx)}（${R.feel.status.label}）`;
+    if(aiStep2) aiStep2.textContent = `当前偏差 ${r1(currentHxDev>0?"+":"")}${r1(Math.abs(currentHxDev))}° → 调${r1(currentTempAdj)>0?"+":""}${r1(currentTempAdj)}°`;
+    
+    if(state.predictiveControl && predC.needPreControl){
+      if(aiStep3) aiStep3.textContent = `🔮 预测 Hx=${r1(predC.hx)}（${predC.label}）→ 提前调${r1(predTempAdj)>0?"+":""}${r1(predTempAdj)}°`;
+      if(aiStep5) aiStep5.textContent = `${r1(R.ctrl.setpoint)}°C ⚠️ 预测性控制`;
+    }else if(state.predictiveControl){
+      if(aiStep3) aiStep3.textContent = `预测平稳，无需提前干预`;
+      if(aiStep5) aiStep5.textContent = `${r1(R.ctrl.setpoint)}°C`;
+    }else{
+      // 不预测模式：显示对比信息
+      if(aiStep3) aiStep3.textContent = `❌ 预测性控制已关闭（仅响应式）`;
+      if(aiStep5) aiStep5.textContent = `${r1(R.ctrl.setpoint)}°C ⚠️ 仅响应式`;
+      
+      // 计算如果启用预测会怎样
+      if(predC.needPreControl){
+        const wouldBeSetpoint = R.fusion.Tcombined + finalTempAdj + predTempAdj * 0.6;
+        const wouldBeHx = humidex(wouldBeSetpoint, state.rh).Hx;
+        const wouldBeComfort = comfortFromHumidex(wouldBeHx);
+        if(aiStep3) aiStep3.textContent += ` | 如果预测：${r1(wouldBeSetpoint)}°C → Hx ${r1(wouldBeHx)}（${wouldBeComfort.label}）`;
+      }
+    }
+    
+    if(aiStep4) aiStep4.textContent = pref!==null ? `融合偏好 ${r1(pref)}°C` : "无偏好";
+
+    // 控制类型标识（根据预测性控制开关）
+    let controlType, controlNote;
+    if(state.predictiveControl && predC.needPreControl){
+      controlType = `<span style="color:var(--orange)">🔮 预测性控制</span>：${predControlReason}`;
+      controlNote = `<span style="color:var(--orange)">⚠️ 已提前干预，避免未来不适！</span>`;
+    }else if(state.predictiveControl){
+      controlType = `<span style="color:var(--green)">✓ 响应式控制</span>：基于当前状态调节`;
+      controlNote = "当前状态稳定，持续监控中。";
+    }else{
+      // 不预测模式：显示对比
+      controlType = `<span style="color:var(--red)">❌ 仅响应式控制</span>：不预测未来，只响应当前不适`;
+      if(predC.needPreControl){
+        const wouldBeSetpoint = R.fusion.Tcombined + currentTempAdj + predTempAdj * 0.6;
+        const wouldBeHx = humidex(wouldBeSetpoint, state.rh).Hx;
+        const wouldBeComfort = comfortFromHumidex(wouldBeHx);
+        controlNote = `<span style="color:var(--red)">⚠️ 如果启用预测：可提前调节至 ${r1(wouldBeSetpoint)}°C，避免未来 ${wouldBeComfort.label}（当前会等到不适才调节）</span>`;
+      }else{
+        controlNote = "当前状态稳定，预测性控制关闭不影响。";
+      }
+    }
+
+    const bubble5 = $("bubble5");
+    if(bubble5){
+      bubble5.innerHTML =
+        `AI 综合考虑当前状态${state.predictiveControl ? "和预测趋势" : "（预测已关闭）"}：<br/><br/>`+
+      `${controlType}<br/><br/>`+
+      `最终决策：<b>设定 ${r1(R.ctrl.setpoint)}°C</b>，风速 <b>${R.ctrl.wind}</b>，模式 <b>${modeLabel}</b>。<br/>`+
+        `${controlNote}`+
+      `<br/><span class="tiny muted">${prefText}</span>`;
+    }
+
+    $("f5").textContent =
+`【预测性控制核心算法】
+
+1. 当前状态评估：
+   current_humidex_dev = current_hx - target_hx
+   current_adjustment = -0.5 * current_humidex_dev
+
+2. 预测状态评估：
+   predicted_hx = humidex(predicted_temperature_15min, humidity)
+   predicted_hx_dev = predicted_hx - target_hx
+
+3. 预测性控制触发条件：
+   if (predicted_status === "bad" AND trend > +1°C)
+      OR (predicted_status === "warn" AND trend > +2°C)
+      OR (predicted_hx < 26°C AND trend < -2°C):
+      ENABLE_PREDICTIVE_CONTROL
+
+4. 融合控制量：
+   if 预测性控制:
+      fusion_weight = 0.4  # 降低当前状态权重
+      pred_weight = 0.6    # 提高预测权重
+   else:
+      fusion_weight = 0.85 # 主要看当前状态
+      pred_weight = 0.15
+
+   final_adjustment = fusion_weight * current_adjustment
+                    + pred_weight * predicted_adjustment
+
+5. 最终设定温度：
+   final_setpoint = combined_temperature + final_adjustment
+   final_setpoint = 0.75 * final_setpoint + 0.25 * user_preference
+
+防抖机制保持不变（死区、保持时间、限速）`;
+
+    // ========== Step 6: 执行与验证 ==========
+    setTag($("tag6"), `执行+验证`);
+    const lastTemp = R.hist.temp.length>=2 ? R.hist.temp[R.hist.temp.length-2] : R.fusion.Tcombined;
+
+    $("execRoom6").textContent = roomName(state.focusRoom);
+    $("execMode6").textContent = modeLabel;
+    const since = state.tick - R.ctrl.lastChangeTick;
+    const holdTicks = Math.round(state.cfg.holdSeconds / 10);
+    $("execDebounce6").textContent = since < holdTicks ? `保持中 (${Math.round((holdTicks-since)*10)}s)` : "可调节";
+
+    $("bNow6").textContent = `${r1(R.fusion.Tcombined)}°C`;
+    $("bNowNote6").textContent = `Humidex ${r1(R.feel.hx)}（${R.feel.status.label}）`;
+
+    // After显示系统设定的目标温度（而不是预测温度），确保温度对齐
+    // 如果目标温度对应的Humidex >= 29（不舒适），需要调整到舒适范围
+    let targetTemp6 = R.ctrl.setpoint;
+    let targetHxResult6 = humidex(targetTemp6, state.rh);
+    let targetHx6 = r1(targetHxResult6.Hx);
+    
+    // 确保目标温度对应的Humidex < 29（舒适）
+    if(targetHx6 >= 29 && R.occ && R.occ.occupied){
+      // 逐步降低目标温度，直到Humidex < 29
+      let adjustedTemp = targetTemp6;
+      let attempts = 0;
+      while(targetHx6 >= 29 && adjustedTemp > 18 && attempts < 20){
+        adjustedTemp -= 0.2;
+        const newHxResult = humidex(adjustedTemp, state.rh);
+        if(newHxResult.Hx < 29){
+          targetTemp6 = adjustedTemp;
+          targetHx6 = r1(newHxResult.Hx);
+          // 更新setpoint，确保系统实际调节到这个温度
+          R.ctrl.setpoint = r1(targetTemp6);
+          break;
+        }
+        attempts++;
+      }
+      // 重新计算一次
+      targetHxResult6 = humidex(targetTemp6, state.rh);
+      targetHx6 = r1(targetHxResult6.Hx);
+    }
+    
+    const targetComfort6 = comfortFromHumidex(targetHx6);
+    $("bAfter6").textContent = `${r1(targetTemp6)}°C`;
+    $("bAfterNote6").textContent = `目标温度：${r1(targetTemp6)}°C（Humidex ${targetHx6}，${targetComfort6.label}）`;
+
+    $("bubble6").innerHTML =
+      `AI 决策已执行，设备正在<b>${modeLabel}</b>模式下工作，目标温度 <b>${r1(R.ctrl.setpoint)}°C</b>。`+
+      `上一刻温度约 <b>${r1(lastTemp)}°C</b>，现在 <b>${r1(R.fusion.Tcombined)}°C</b>；`+
+      `如果下一步仍朝目标方向走，说明策略稳定；否则需要降低权重或延长保持时间。`;
+
+    $("f6").textContent =
+`验证（工程思路）：
+- 预计：After_15min = forecast_temperature_15min
+- 回读：Next_tick_reading = next combined_temperature
+- 如果偏离变大：提高防抖、降低响应、检查传感器可信度
+
+效果闭环：
+系统每秒检测→判断→预测→计算→执行→验证
+形成完整闭环，确保老人持续处于舒适状态`;
+
+    // 卡片显示/隐藏逻辑已移至 updateStepStates() 统一处理，避免重复
+  }
+
+  // ===== Highlight room =====
+  function highlightRoom(roomKey, reason=""){
+    ["room_bed","room_liv","room_bath"].forEach(id=>{
+      $(id).classList.remove("highlight");
+    });
+    const map={bedroom:"room_bed", living:"room_liv", bathroom:"room_bath"};
+    $(map[roomKey]).classList.add("highlight");
+    if(reason) addLog("调试高亮", `${roomName(roomKey)}｜${reason}`);
+    setTimeout(()=>$(map[roomKey]).classList.remove("highlight"), 900);
+  }
+
+  // ===== Render all =====
+  function renderAll(){
+    // 更新输入控件显示值（添加空值检查）
+    const hourV = $("hourV");
+    if(hourV) hourV.textContent = `${String(state.hour).padStart(2,"0")}:00`;
+    
+    const rhV = $("rhV");
+    if(rhV) rhV.textContent = `${state.rh}%`;
+    
+    const t_bedEl = $("t_bed");
+    const t_bedV = $("t_bedV");
+    if(t_bedEl && t_bedV) t_bedV.textContent = `${r1(parseFloat(t_bedEl.value) || 0)}°C`;
+    
+    const t_livEl = $("t_liv");
+    const t_livV = $("t_livV");
+    if(t_livEl && t_livV) t_livV.textContent = `${r1(parseFloat(t_livEl.value) || 0)}°C`;
+    
+    const t_bathEl = $("t_bath");
+    const t_bathV = $("t_bathV");
+    if(t_bathEl && t_bathV) t_bathV.textContent = `${r1(parseFloat(t_bathEl.value) || 0)}°C`;
+    
+    const pirLivEl = $("pirLiv");
+    const pirLivV = $("pirLivV");
+    if(pirLivEl && pirLivV) pirLivV.textContent = `${pirLivEl.value}`;
+    
+    const fallEl = $("fall");
+    const fallV = $("fallV");
+    if(fallEl && fallV) fallV.textContent = `${r2(parseFloat(fallEl.value) || 0)}`;
+    
+    const overrideTempEl = $("overrideTemp");
+    const overrideTempV = $("overrideTempV");
+    if(overrideTempEl && overrideTempV) overrideTempV.textContent = `${r1(parseFloat(overrideTempEl.value) || 0)}°C`;
+
+    renderFloor();
+    renderDecision();
+
+    // 新增：更新卡通形象和状态徽章
+    updateAvatarAndBadges();
+
+    // 新增：更新双时间尺度趋势图（传递设定温度用于显示目标线）
+    const F = state.rooms[state.focusRoom];
+    if(F) {
+    renderDualSparkline(dualHistory.humidex, dualHistory.temp, F.ctrl.setpoint);
+    }
+
+    // 新增：更新 Step 状态（统一处理卡片显示）
+    updateStepStates();
+  }
+
+  // ===== Simulation step =====
+  function step(reason="tick"){
+    state.tick++;
+    const tickLabel = $("tickLabel");
+    if(tickLabel) tickLabel.textContent = `tick: ${state.tick}`;
+
+    // Apply inputs
+    state.hour = parseInt($("hour").value,10);
+    state.rh = parseInt($("rh").value,10);
+    state.overrideOn = $("overrideOn").value==="1";
+    state.overrideTemp = parseFloat($("overrideTemp").value);
+
+    state.rooms.bedroom.baseT = parseFloat($("t_bed").value);
+    state.rooms.living.baseT  = parseFloat($("t_liv").value);
+    state.rooms.bathroom.baseT= parseFloat($("t_bath").value);
+
+    state.rooms.bedroom.doorOpen = $("doorBed").value==="1";
+    state.rooms.living.pir = parseInt($("pirLiv").value,10);
+
+    state.rooms.bedroom.radarMode = $("radarBed").value;
+    state.rooms.living.radarMode  = $("radarLiv").value;
+    state.rooms.bathroom.radarMode= $("radarBath").value;
+
+    state.rooms.bathroom.fallRiskNow = parseFloat($("fall").value);
+
+    // pipeline per room
+    ["bedroom","living","bathroom"].forEach(k=>{
+      computeOccupancy(k);
+      computeFusion(k);
+      computeComfort(k);
+      computePrediction(k);
+      computeControl(k);
+
+      // history for sparks
+      const R=state.rooms[k];
+      pushHist(R.hist.temp, R.fusion.Tcombined, 30);
+      pushHist(R.hist.humidex, R.feel.hx, 30);
+      pushHist(R.hist.occ, R.occ.p, 30);
+    });
+
+    // 新增：记录双时间尺度历史数据（当前聚焦房间）
+    const F=state.rooms[state.focusRoom];
+    pushDualHist(dualHistory.humidex, F.feel.hx);
+    pushDualHist(dualHistory.temp, F.fusion.Tcombined);
+
+    addLog("推理完成",
+      `${roomName(state.focusRoom)}：p=${r2(F.occ.p)}(${F.occ.occupied?"有人":"无人"}) · T=${F.fusion.Tcombined}°C · Hx=${F.feel.hx}(${F.feel.status.label}) · 设定=${F.ctrl.setpoint}°C(${F.ctrl.mode})`);
+
+    if(state.anomalyOnce){
+      addLog("异常注入", "已注入一次窗边温度点异常（本步生效，下一步恢复）。");
+      state.anomalyOnce=false;
+    }
+
+    renderAll();
+  }
+
+  // ===== Auto jitter =====
+  function autoJitter(){
+    const drift = ()=> (Math.random()*2-1)*0.05;
+    state.rooms.bedroom.baseT = clamp(state.rooms.bedroom.baseT + drift(), 18, 30);
+    state.rooms.living.baseT  = clamp(state.rooms.living.baseT + drift(), 18, 30);
+    state.rooms.bathroom.baseT= clamp(state.rooms.bathroom.baseT + drift(), 20, 40);
+
+    ["bedroom","living","bathroom"].forEach(k=>{
+      const S = state.rooms[k].sensor;
+      ["bedside","window","outlet"].forEach(s=>{
+        S[s].battery = clamp(S[s].battery - (0.0003 + Math.random()*0.0004), 0.05, 1.0);
+      });
+    });
+
+    $("t_bed").value = state.rooms.bedroom.baseT;
+    $("t_liv").value = state.rooms.living.baseT;
+    $("t_bath").value = state.rooms.bathroom.baseT;
+  }
+
+  // ===== 辅助函数：计算场景的预期Humidex =====
+  function estimateHumidexForScene(temp, rh){
+    const {Hx} = humidex(temp, rh);
+    return Hx;
+  }
+  
+  // ===== 场景应用后直接开始执行 =====
+  function showSceneInfo(data){
+    // 自动收起左侧面板
+    const mainGrid = $("mainGrid");
+    if(mainGrid){
+      mainGrid.classList.add("left-collapsed");
+      const collapseBtn = $("leftCollapseBtn");
+      if(collapseBtn) {
+        collapseBtn.textContent = "▶";
+        collapseBtn.title = "展开虚拟传感器面板";
+        collapseBtn.style.display = "flex"; // 确保按钮可见
+      }
+      console.log("左侧面板已收起");
+    } else {
+      console.warn("未找到mainGrid元素");
+    }
+    
+    // 根据场景房间，只显示对应的房间卡片
+    if(data && data.room){
+      const roomMap = {
+        bedroom: "room_bed",
+        living: "room_liv",
+        bathroom: "room_bath"
+      };
+      
+      // 隐藏所有房间卡片
+      ["room_bed", "room_liv", "room_bath"].forEach(roomId => {
+        const roomEl = $(roomId);
+        if(roomEl){
+          roomEl.classList.add("hidden");
+        }
+      });
+      
+      // 显示场景对应的房间卡片
+      const targetRoomId = roomMap[data.room];
+      if(targetRoomId){
+        const targetRoomEl = $(targetRoomId);
+        if(targetRoomEl){
+          targetRoomEl.classList.remove("hidden");
+        }
+      }
+    } else {
+      // 如果没有指定房间，显示所有房间卡片
+      ["room_bed", "room_liv", "room_bath"].forEach(roomId => {
+        const roomEl = $(roomId);
+        if(roomEl){
+          roomEl.classList.remove("hidden");
+        }
+      });
+    }
+    
+    // 直接执行初始计算（确保初始状态是不舒适的）
+    step("applyScene");
+    
+    // 再执行一次计算，确保初始状态正确记录
+    step("applyScene");
+    
+    // 更新房间芯片
+    const roomChips = document.querySelectorAll(".chip");
+    roomChips.forEach(c=>{
+      c.classList.toggle("active", c.dataset.room === state.focusRoom);
+    });
+    
+    renderAll();
+    
+    // 延迟500ms后自动开始执行Step顺序
+    setTimeout(()=>{
+      startAutoStepSequenceAuto();
+    }, 500);
+  }
+  
+  // ===== 自动开始执行Step顺序（场景选择后） =====
+  function startAutoStepSequenceAuto(){
+    // 如果正在执行，先停止
+    if(state.autoStepRunning){
+      state.autoStepRunning = false;
+    }
+    
+    state.auto = true;
+    state.autoStepRunning = true;
+    state.autoStepCurrent = 0;
+    
+    const autoSwitch = $("autoSwitch");
+    if(autoSwitch){
+      autoSwitch.classList.add("on");
+      autoSwitch.setAttribute("aria-checked", "true");
+    }
+    
+    // 显示执行进度
+    const progress = $("stepProgress");
+    if(progress) progress.style.display = "flex";
+    
+    addLog("自动模拟", "场景已加载，开始按Step顺序自动执行...");
+    
+    // 延迟一下确保状态已设置，然后开始执行
+    setTimeout(()=>{
+      if(state.autoStepRunning){
+        startAutoStepSequenceInternal();
+      }
+    }, 100);
+  }
+  
+  // ===== 自动Step顺序执行（移到外部以便访问） =====
+  function startAutoStepSequenceInternal(){
+    if(!state.autoStepRunning) {
+      // console.log("自动执行已停止，不再继续");
+      return;
+    }
+    
+    // 执行下一个Step
+    state.autoStepCurrent++;
+    
+    // 切换到当前Step
+    state.activeStep = state.autoStepCurrent;
+    
+    // 更新执行进度
+    const progress = $("stepProgress");
+    const progressText = $("stepProgressText");
+    const progressFill = $("stepProgressFill");
+    if(progress && progressText && progressFill){
+      const current = state.autoStepCurrent;
+      const total = 6;
+      const percent = (current / total) * 100;
+      progressText.textContent = `执行 Step ${current}/${total}`;
+      progressFill.style.width = `${percent}%`;
+    }
+    
+    // console.log(`执行 Step ${state.autoStepCurrent}, autoStepRunning: ${state.autoStepRunning}`);
+    
+    // ===== Step 1: 占用判断 =====
+    if(state.autoStepCurrent === 1){
+      addLog("自动Step", `执行 Step 1：占用判断...`);
+      
+      // 执行一次完整计算（占用判断）
+      step("autoStep");
+      renderAll();
+      
+      // 检查是否有人
+      const F = state.rooms[state.focusRoom];
+      const hasOccupied = F && F.occ && F.occ.occupied;
+      
+      if(!hasOccupied){
+        // 无人：停止执行，不显示老人
+        state.autoStepRunning = false;
+        state.auto = false;
+        state.autoStepCurrent = 0;
+        const switchEl = $("autoSwitch");
+        if(switchEl){
+          switchEl.classList.remove("on");
+          switchEl.setAttribute("aria-checked", "false");
+        }
+        
+        // 隐藏进度和老人
+        const progress = $("stepProgress");
+        if(progress) progress.style.display = "none";
+        const avatarSection = $("avatarSection");
+        if(avatarSection) avatarSection.style.display = "none";
+        
+        addLog("自动模拟", "❌ Step 1判断：无人，停止执行，不显示老人");
+        showToast("无人场景：已停止执行", "info");
+        return;
+      }
+      
+      // 有人：继续执行，显示老人
+      const avatarSection = $("avatarSection");
+      if(avatarSection) avatarSection.style.display = "";
+      
+      // 记录初始状态（确保是不舒适的）
+      state._initialState = {};
+      ["bedroom","living","bathroom"].forEach(k=>{
+        const R = state.rooms[k];
+        if(R && R.occ && R.occ.occupied){
+          R._initialTemp = R.fusion.Tcombined || R.baseT;
+          R._initialHx = R.feel.hx;
+          R._initialStatus = R.feel.status.label;
+          
+          // 验证初始状态必须是不舒适的（Humidex >= 29 或温度过低 < 20°C）
+          const isUncomfortable = R._initialHx >= 29 || R._initialTemp < 20;
+          if(!isUncomfortable){
+            // 如果初始状态是舒适的，记录警告并调整
+            console.warn(`${roomName(k)}初始状态是舒适的（Humidex ${r1(R._initialHx)}, 温度 ${r1(R._initialTemp)}°C），应该是不舒适的`);
+            // 强制标记为不舒适状态
+            if(R._initialHx < 29 && R._initialTemp >= 20){
+              R._initialStatus = "略闷热"; // 强制标记为不舒适
+            }
+          }
+          
+          state._initialState[k] = {
+            temp: R._initialTemp,
+            hx: R._initialHx,
+            status: R._initialStatus
+          };
+          
+          addLog("初始状态", `${roomName(k)}: ${r1(R._initialTemp)}°C, Humidex ${r1(R._initialHx)}, ${R._initialStatus} ${isUncomfortable ? "✓不舒适" : "⚠应不舒适"}`);
+        }
+      });
+      
+      // 先执行一次完整计算，获取目标设定温度
+      step("autoStepInit");
+      
+      // 记录目标温度，并确保最终Humidex < 29（舒适）
+      ["bedroom","living","bathroom"].forEach(k=>{
+        const R = state.rooms[k];
+        if(R && R.occ && R.occ.occupied && R.ctrl){
+          let targetTemp = R.ctrl.setpoint;
+          let targetHxResult = humidex(targetTemp, state.rh);
+          
+          // 如果目标Humidex >= 29，需要调整目标温度使其 < 29
+          if(targetHxResult.Hx >= 29){
+            // 逐步降低温度，直到Humidex < 29
+            while(targetHxResult.Hx >= 29 && targetTemp > 18){
+              targetTemp -= 0.5;
+              targetHxResult = humidex(targetTemp, state.rh);
+            }
+            // 确保目标温度合理
+            targetTemp = Math.max(targetTemp, 18);
+            targetHxResult = humidex(targetTemp, state.rh);
+          }
+          
+          R._targetTemp = targetTemp;
+          R._targetHx = targetHxResult.Hx;
+          addLog("Step 1", `${roomName(k)}: 判断有人 ✓ | 初始 ${r1(R._initialTemp)}°C (Humidex ${r1(R._initialHx)}, ${R._initialStatus}) → 目标 ${r1(R._targetTemp)}°C (Humidex ${r1(R._targetHx)}, 舒适)`);
+        }
+      });
+      
+      renderAll();
+      
+      // 2秒后执行Step 2
+      setTimeout(()=>{
+        console.log(`Step 1完成，准备执行Step 2, autoStepRunning: ${state.autoStepRunning}`);
+        if(state.autoStepRunning){
+          startAutoStepSequenceInternal();
+        }else{
+          console.log("Step 1后autoStepRunning为false，停止执行");
+        }
+      }, 2000);
+      return;
+    }
+    
+    // ===== Step 2: 温度融合 =====
+    if(state.autoStepCurrent === 2){
+      addLog("自动Step", `执行 Step 2：温度融合...`);
+      step("autoStep");
+      renderAll();
+      
+      const F = state.rooms[state.focusRoom];
+      if(F && F.feel){
+        addLog("Step 2", `融合温度 ${r1(F.fusion.Tcombined)}°C`);
+      }
+      
+      setTimeout(()=>{
+        console.log(`Step 2完成，准备执行Step 3, autoStepRunning: ${state.autoStepRunning}`);
+        if(state.autoStepRunning){
+          startAutoStepSequenceInternal();
+        }else{
+          console.log("Step 2后autoStepRunning为false，停止执行");
+        }
+      }, 2000);
+      return;
+    }
+    
+    // ===== Step 3: 体感判断 =====
+    if(state.autoStepCurrent === 3){
+      addLog("自动Step", `执行 Step 3：体感判断...`);
+      step("autoStep");
+      renderAll();
+      
+      const F = state.rooms[state.focusRoom];
+      if(F && F.feel){
+        addLog("Step 3", `体感状态：Humidex ${r1(F.feel.hx)} (${F.feel.status.label}) - ${F.feel.status.level === "ok" ? "舒适" : "不舒适"}`);
+      }
+      
+      // 检查预测开关：如果关闭，只执行到Step 3就停止
+      if(!state.predictiveControl){
+        state.autoStepRunning = false;
+        state.auto = false;
+        state.autoStepCurrent = 0;
+        const switchEl = $("autoSwitch");
+        if(switchEl){
+          switchEl.classList.remove("on");
+          switchEl.setAttribute("aria-checked", "false");
+        }
+        
+        // 隐藏进度
+        const progress = $("stepProgress");
+        if(progress) progress.style.display = "none";
+        
+        addLog("自动模拟", `⚠️ 预测性控制已关闭：只执行到Step 3，停留在不舒适状态（Humidex ${r1(F.feel.hx)}, ${F.feel.status.label}）`);
+        showToast("预测已关闭：停留在不舒适状态", "warn");
+        return;
+      }
+      
+      // 预测开启：继续执行Step 4-6
+      setTimeout(()=>{
+        console.log(`Step 3完成，预测开启，准备执行Step 4, autoStepRunning: ${state.autoStepRunning}`);
+        if(state.autoStepRunning){
+          startAutoStepSequenceInternal();
+        }else{
+          console.log("Step 3后autoStepRunning为false，停止执行");
+        }
+      }, 2000);
+      return;
+    }
+    
+    // ===== Step 4-6: 预测、控制、执行（仅在预测开启时执行） =====
+    if(state.autoStepCurrent >= 4 && state.autoStepCurrent <= 6){
+      addLog("自动Step", `执行 Step ${state.autoStepCurrent}：${state.autoStepCurrent === 4 ? "预测" : state.autoStepCurrent === 5 ? "控制" : "执行"}...`);
+      
+      // 让温度逐渐变化（从不舒适变舒适）
+      ["bedroom","living","bathroom"].forEach(k=>{
+        const R = state.rooms[k];
+        if(R && R.occ && R.occ.occupied && R._initialTemp !== undefined && R._targetTemp !== undefined){
+          const initial = R._initialTemp;
+          const target = R._targetTemp;
+          const diff = target - initial;
+          
+          // Step 4-6让温度逐渐接近目标（从Step 3的不舒适到Step 6的舒适）
+          const stepProgress = (state.autoStepCurrent - 3) / 3; // Step 4: 0.33, Step 5: 0.67, Step 6: 1.0
+          const eased = stepProgress < 0.5 
+            ? 2 * stepProgress * stepProgress 
+            : 1 - Math.pow(-2 * stepProgress + 2, 2) / 2;
+          
+          const newTemp = initial + diff * eased;
+          R.baseT = clamp(newTemp, 18, 35);
+          
+          const bedEl = $("t_bed");
+          const livEl = $("t_liv");
+          const bathEl = $("t_bath");
+          if(k === "bedroom" && bedEl) bedEl.value = R.baseT.toFixed(1);
+          else if(k === "living" && livEl) livEl.value = R.baseT.toFixed(1);
+          else if(k === "bathroom" && bathEl) bathEl.value = R.baseT.toFixed(1);
+        }
+      });
+      
+      step("autoStep");
+      
+      // Step 6时，确保最终温度对应的Humidex < 29（舒适）
+      if(state.autoStepCurrent === 6){
+        ["bedroom","living","bathroom"].forEach(k=>{
+          const R = state.rooms[k];
+          if(R && R.occ && R.occ.occupied && R._targetTemp !== undefined){
+            // 确保最终温度接近目标温度，且Humidex < 29
+            const finalHxResult = humidex(R.baseT, state.rh);
+            if(finalHxResult.Hx >= 29){
+              // 如果Humidex仍 >= 29，进一步降低温度
+              let adjustedTemp = R.baseT;
+              let attempts = 0;
+              while(finalHxResult.Hx >= 29 && adjustedTemp > 18 && attempts < 10){
+                adjustedTemp -= 0.3;
+                const newHxResult = humidex(adjustedTemp, state.rh);
+                if(newHxResult.Hx < 29){
+                  R.baseT = adjustedTemp;
+                  const bedEl = $("t_bed");
+                  const livEl = $("t_liv");
+                  const bathEl = $("t_bath");
+                  if(k === "bedroom" && bedEl) bedEl.value = R.baseT.toFixed(1);
+                  else if(k === "living" && livEl) livEl.value = R.baseT.toFixed(1);
+                  else if(k === "bathroom" && bathEl) bathEl.value = R.baseT.toFixed(1);
+                  // 重新计算一次
+                  step("autoStep");
+                  break;
+                }
+                attempts++;
+              }
+            }
+          }
+        });
+      }
+      
+      renderAll();
+      
+      const F = state.rooms[state.focusRoom];
+      if(F && F.feel){
+        addLog(`Step ${state.autoStepCurrent}`, `温度 ${r1(F.fusion.Tcombined)}°C，Humidex ${r1(F.feel.hx)} (${F.feel.status.label})`);
+      }
+      
+      // Step 6完成后停止
+      if(state.autoStepCurrent >= 6){
+        // 隐藏进度
+        const progress = $("stepProgress");
+        if(progress) progress.style.display = "none";
+        
+        // 记录最终状态（确保是舒适的）
+        const F = state.rooms[state.focusRoom];
+        let finalState = null;
+        if(F && F.occ && F.occ.occupied && F.feel){
+          // 如果最终状态仍不舒适（Humidex >= 29 或状态level不是"ok"），强制调整到舒适
+          let needsAdjustment = false;
+          if(F.feel.hx >= 29){
+            needsAdjustment = true;
+          } else if(F.feel.status.level !== "ok"){
+            // 即使Humidex < 29，如果状态level不是"ok"，也需要调整
+            needsAdjustment = true;
+          }
+          
+          if(needsAdjustment){
+            let finalTemp = F.baseT;
+            let maxAttempts = 30;
+            let adjusted = false;
+            
+            while((F.feel.hx >= 29 || F.feel.status.level !== "ok") && finalTemp > 18 && maxAttempts > 0){
+              if(F.feel.hx >= 29){
+                finalTemp -= 0.2; // 降温
+              } else if(F.feel.status.level === "bad" && F.feel.hx < 28){
+                finalTemp += 0.2; // 升温（偏冷情况）
+              } else {
+                finalTemp -= 0.1; // 微调
+              }
+              
+              F.baseT = clamp(finalTemp, 18, 35);
+              const bedEl = $("t_bed");
+              const livEl = $("t_liv");
+              const bathEl = $("t_bath");
+              if(state.focusRoom === "bedroom" && bedEl) bedEl.value = F.baseT.toFixed(1);
+              else if(state.focusRoom === "living" && livEl) livEl.value = F.baseT.toFixed(1);
+              else if(state.focusRoom === "bathroom" && bathEl) bathEl.value = F.baseT.toFixed(1);
+              
+              // 重新计算一次，更新所有状态（包括老人形象）
+              step("autoStep");
+              renderAll(); // 这会调用updateAvatarAndBadges，更新老人形象
+              
+              // 检查是否达到舒适状态
+              if(F.feel.hx < 29 && F.feel.status.level === "ok"){
+                adjusted = true;
+                addLog("最终调整", `${roomName(state.focusRoom)}: 调整至 ${r1(F.baseT)}°C，确保舒适（Humidex ${r1(F.feel.hx)} < 29, 状态: ${F.feel.status.label}）`);
+                break;
+              }
+              maxAttempts--;
+            }
+            
+            if(!adjusted){
+              console.warn(`无法将${roomName(state.focusRoom)}调整到舒适状态，当前Humidex: ${r1(F.feel.hx)}, 状态: ${F.feel.status.label}`);
+            }
+          }
+          
+          finalState = {
+            temp: F.fusion.Tcombined,
+            hx: F.feel.hx,
+            status: F.feel.status.label
+          };
+          
+          // 验证最终状态
+          const isComfortable = finalState.hx < 29 && F.feel.status.level === "ok";
+          addLog("最终状态", `${roomName(state.focusRoom)}: ${r1(finalState.temp)}°C, Humidex ${r1(finalState.hx)}, ${finalState.status} ${isComfortable ? "✓舒适" : "⚠需调整"}`);
+        }
+        
+        // 清理记录
+        ["bedroom","living","bathroom"].forEach(k=>{
+          const R = state.rooms[k];
+          if(R){
+            R._initialTemp = null;
+            R._targetTemp = null;
+          }
+        });
+        
+        state.autoStepRunning = false;
+        state.auto = false;
+        state.autoStepCurrent = 0;
+        const switchEl = $("autoSwitch");
+        if(switchEl){
+          switchEl.classList.remove("on");
+          switchEl.setAttribute("aria-checked", "false");
+        }
+        
+        // 验证最终状态：只有有人的房间应该是舒适的
+        let finalStatus = [];
+        let allComfortable = true;
+        ["bedroom","living","bathroom"].forEach(k=>{
+          const R = state.rooms[k];
+          if(R && R.occ && R.occ.occupied && R.feel){
+            const isComfort = R.feel.status.level === "ok";
+            finalStatus.push(`${roomName(k)}: Humidex ${r1(R.feel.hx)} (${R.feel.status.label})`);
+            if(!isComfort) allComfortable = false;
+          }
+        });
+        
+        // 验证无人房间不应该也是舒适的
+        ["bedroom","living","bathroom"].forEach(k=>{
+          const R = state.rooms[k];
+          if(R && (!R.occ || !R.occ.occupied) && R.feel){
+            const isComfort = R.feel.status.level === "ok";
+            if(isComfort){
+              addLog("验证警告", `⚠️ ${roomName(k)}无人但处于舒适状态，这不应该发生`);
+            }
+          }
+        });
+        
+        if(allComfortable && finalStatus.length > 0){
+          addLog("自动模拟", `✅ Step顺序执行完成（Step 1-6），老人状态已改善：${finalStatus.join("; ")}`);
+        } else {
+          addLog("自动模拟", `⚠️ Step顺序执行完成，但状态未完全达到舒适：${finalStatus.join("; ")}`);
+        }
+        
+        // 显示完成总结卡片
+        if(finalState && state._initialState && state._initialState[state.focusRoom]){
+          const initial = state._initialState[state.focusRoom];
+          showSummaryCard(
+            {temp: initial.temp, status: initial.status},
+            {temp: finalState.temp, status: finalState.status}
+          );
+        }
+        
+        if(allComfortable){
+          showToast("自动模拟完成：老人已调节到舒适状态", "success");
+        } else {
+          showToast("自动模拟完成：状态改善中", "info");
+        }
+        return;
+      }
+      
+      // 继续下一个Step
+      setTimeout(()=>{
+        console.log(`Step ${state.autoStepCurrent}完成，准备执行下一个Step, autoStepRunning: ${state.autoStepRunning}`);
+        if(state.autoStepRunning){
+          startAutoStepSequenceInternal();
+        }else{
+          console.log(`Step ${state.autoStepCurrent}后autoStepRunning为false，停止执行`);
+        }
+      }, 2000);
+      return;
+    }
+  }
+  
+  // ===== 显示完成总结 =====
+  function showSummaryCard(initialData, finalData){
+    const card = $("summaryCard");
+    const beforeTemp = $("summaryBeforeTemp");
+    const beforeStatus = $("summaryBeforeStatus");
+    const afterTemp = $("summaryAfterTemp");
+    const afterStatus = $("summaryAfterStatus");
+    const closeBtn = $("summaryClose");
+    
+    if(!card) return;
+    
+    if(beforeTemp) beforeTemp.textContent = `${r1(initialData.temp)}°C`;
+    if(beforeStatus) beforeStatus.textContent = initialData.status;
+    if(afterTemp) afterTemp.textContent = `${r1(finalData.temp)}°C`;
+    if(afterStatus) afterStatus.textContent = finalData.status;
+    
+    card.style.display = "block";
+    
+    // 手动关闭按钮
+    if(closeBtn){
+      closeBtn.onclick = ()=>{
+        card.style.display = "none";
+      };
+    }
+    
+    // 自动关闭：2秒后自动退出
+    setTimeout(()=>{
+      if(card && card.style.display !== "none"){
+        card.style.display = "none";
+        addLog("自动关闭", "执行完成卡片已自动关闭");
+      }
+    }, 2000);
+  }
+
+  // ===== Scenarios =====
+  function applyScene(scene){
+    // 重置房间偏移和传感器噪声（避免场景间干扰）
+    state.rooms.bedroom.offsets.window = +0.6;
+    state.rooms.bedroom.sensor.window.noise = 0.12;
+    state.rooms.living.offsets.window = +0.3;
+    state.rooms.living.sensor.window.noise = 0.12;
+    state.rooms.bathroom.offsets.window = +0.1;
+    state.rooms.bathroom.sensor.window.noise = 0.12;
+    
+    // 关闭手动覆盖，让系统自动调节
+    const overrideOnEl = $("overrideOn");
+    if(overrideOnEl) overrideOnEl.value = "0";
+    
+    // 重置所有房间的占用状态
+    state.rooms.bedroom.occ.occupied = false;
+    state.rooms.bedroom.occ.p = 0;
+    state.rooms.living.occ.occupied = false;
+    state.rooms.living.occ.p = 0;
+    state.rooms.bathroom.occ.occupied = false;
+    state.rooms.bathroom.occ.p = 0;
+    
+    // ===== 场景数据定义 =====
+    const sceneData = {
+      scene1: {
+        icon: "🛋️", title: "场景1：下午3点·卧室·老人静坐·闷热不适",
+        desc: "下午3点，老人在卧室静坐休息。由于午后阳光照射，室内温度升高至27.5°C，湿度65%，Humidex约33，老人感到闷热不适。系统将预测未来趋势并提前调节。",
+        time: "15:00", location: "卧室", person: "老人静坐", activity: "静坐",
+        temp: 27.5, rh: 65, room: "bedroom", radar: "sit",
+        initialStatus: "闷热不适", finalStatus: "舒适",
+        predictive: true
+      },
+      scene2: {
+        icon: "🛋️", title: "场景2：下午4点·卧室·老人静坐·闷热（预测关闭）",
+        desc: "下午4点，老人在卧室静坐。温度27.8°C，湿度68%，Humidex约34，闷热不适。预测性控制已关闭，系统将只响应当前不适，不会提前调节。",
+        time: "16:00", location: "卧室", person: "老人静坐", activity: "静坐",
+        temp: 27.8, rh: 68, room: "bedroom", radar: "sit",
+        initialStatus: "闷热不适", finalStatus: "停留不舒适",
+        predictive: false
+      },
+      scene3: {
+        icon: "🏠", title: "场景3：上午11点·全屋·无人·节能模式",
+        desc: "上午11点，全屋无人，老人外出。系统进入节能模式，温度保持在26°C左右。Step 1判断无人后将停止执行，不显示老人。",
+        time: "11:00", location: "全屋", person: "无人", activity: "—",
+        temp: 26.0, rh: 55, room: "bedroom", radar: "idle",
+        initialStatus: "无人", finalStatus: "停止执行",
+        predictive: true
+      },
+      scene4: {
+        icon: "🪑", title: "场景4：下午2点·客厅·老人静坐·略闷热",
+        desc: "下午2点，老人在客厅静坐看电视。温度27.5°C，湿度64%，Humidex约32，略感闷热。系统将预测并调节到舒适状态。",
+        time: "14:00", location: "客厅", person: "老人静坐", activity: "静坐",
+        temp: 27.5, rh: 64, room: "living", radar: "sit",
+        initialStatus: "略闷热", finalStatus: "舒适",
+        predictive: true
+      },
+      scene5: {
+        icon: "🛏️", title: "场景5：早上8点·卧室·老人睡眠·偏冷不适",
+        desc: "早上8点，老人还在卧室睡觉。温度17.5°C，湿度58%，Humidex约19，感觉偏冷不适。系统将预测并升温到舒适状态。",
+        time: "08:00", location: "卧室", person: "老人睡眠", activity: "睡眠",
+        temp: 17.5, rh: 58, room: "bedroom", radar: "sleep",
+        initialStatus: "偏冷不适", finalStatus: "舒适",
+        predictive: true
+      },
+      scene6: {
+        icon: "🔥", title: "场景6：傍晚6点·卧室·老人静坐·高温高湿",
+        desc: "傍晚6点，老人在卧室静坐。由于天气炎热，温度28.5°C，湿度75%，Humidex约38，严重不适。系统将紧急调节到舒适状态。",
+        time: "18:00", location: "卧室", person: "老人静坐", activity: "静坐",
+        temp: 28.5, rh: 75, room: "bedroom", radar: "sit",
+        initialStatus: "严重不适", finalStatus: "舒适",
+        predictive: true
+      }
+    };
+    
+    // ===== 场景1：下午3点·卧室·老人静坐·闷热不适 =====
+    if(scene==="scene1"){
+      const data = sceneData.scene1;
+      // 卧室：27.5°C, 65% → 调节到舒适（约24.5°C）
+      // 其他房间：设置稍高温度，确保不在舒适范围（Humidex > 29）
+      $("t_bed").value=data.temp; $("t_liv").value=28.0; $("t_bath").value=30.0;
+      $("rh").value=data.rh; $("hour").value=parseInt(data.time.split(":")[0]);
+      $("radarBed").value=data.radar; $("radarLiv").value="idle"; $("radarBath").value="idle";
+      $("pirLiv").value=0; $("doorBed").value="0"; $("fall").value=0.10;
+      state.focusRoom = data.room;
+      state.predictiveControl = data.predictive;
+      showSceneInfo(data);
+    }
+    
+    // ===== 场景2：下午4点·卧室·老人静坐·闷热（预测关闭） =====
+    if(scene==="scene2"){
+      const data = sceneData.scene2;
+      // 卧室：27.8°C, 68% → 预测关闭，停留在不舒适
+      // 其他房间：设置稍高温度，确保不在舒适范围
+      $("t_bed").value=data.temp; $("t_liv").value=28.5; $("t_bath").value=30.5;
+      $("rh").value=data.rh; $("hour").value=parseInt(data.time.split(":")[0]);
+      $("radarBed").value=data.radar; $("radarLiv").value="idle"; $("radarBath").value="idle";
+      $("pirLiv").value=0; $("doorBed").value="0"; $("fall").value=0.10;
+      state.focusRoom = data.room;
+      state.predictiveControl = data.predictive;
+      showSceneInfo(data);
+    }
+    
+    // ===== 场景3：上午11点·全屋·无人·节能模式 =====
+    if(scene==="scene3"){
+      const data = sceneData.scene3;
+      $("t_bed").value=data.temp; $("t_liv").value=25.5; $("t_bath").value=27.0;
+      $("rh").value=data.rh; $("hour").value=parseInt(data.time.split(":")[0]);
+      $("radarBed").value=data.radar; $("radarLiv").value="idle"; $("radarBath").value="idle";
+      $("pirLiv").value=0; $("doorBed").value="0"; $("fall").value=0.05;
+      state.focusRoom = data.room;
+      state.predictiveControl = data.predictive;
+      const avatarSection = $("avatarSection");
+      if(avatarSection) avatarSection.style.display = "none";
+      showSceneInfo(data);
+    }
+    
+    // ===== 场景4：下午2点·客厅·老人静坐·略闷热 =====
+    if(scene==="scene4"){
+      const data = sceneData.scene4;
+      // 客厅：27.5°C, 64% → Humidex约32（略闷热，不舒适）→ 调节到舒适（约24.0°C）
+      // 其他房间：设置稍高温度，确保不在舒适范围
+      $("t_bed").value=28.0; $("t_liv").value=data.temp; $("t_bath").value=30.0;
+      $("rh").value=data.rh; $("hour").value=parseInt(data.time.split(":")[0]);
+      $("radarBed").value="idle"; $("radarLiv").value=data.radar; $("radarBath").value="idle";
+      $("pirLiv").value=1; $("doorBed").value="0"; $("fall").value=0.08;
+      state.focusRoom = data.room;
+      state.predictiveControl = data.predictive;
+      showSceneInfo(data);
+    }
+    
+    // ===== 场景5：早上8点·卧室·老人睡眠·偏冷不适 =====
+    if(scene==="scene5"){
+      const data = sceneData.scene5;
+      // 卧室：17.5°C, 58% → Humidex约19（偏冷不适，温度过低需要升温）→ 调节到舒适（约24.0°C）
+      // 注意：虽然Humidex<29，但温度17.5°C过低，体感偏冷，系统会升温
+      // 其他房间：设置稍高温度，确保不在舒适范围
+      $("t_bed").value=data.temp; $("t_liv").value=28.0; $("t_bath").value=30.0;
+      $("rh").value=data.rh; $("hour").value=parseInt(data.time.split(":")[0]);
+      $("radarBed").value=data.radar; $("radarLiv").value="idle"; $("radarBath").value="idle";
+      $("pirLiv").value=0; $("doorBed").value="0"; $("fall").value=0.10;
+      state.focusRoom = data.room;
+      state.predictiveControl = data.predictive;
+      showSceneInfo(data);
+    }
+    
+    // ===== 场景6：傍晚6点·卧室·老人静坐·高温高湿 =====
+    if(scene==="scene6"){
+      const data = sceneData.scene6;
+      // 卧室：28.5°C, 75% → 调节到舒适（约24.0°C）
+      // 其他房间：设置稍高温度，确保不在舒适范围
+      $("t_bed").value=data.temp; $("t_liv").value=29.0; $("t_bath").value=31.0;
+      $("rh").value=data.rh; $("hour").value=parseInt(data.time.split(":")[0]);
+      $("radarBed").value=data.radar; $("radarLiv").value="idle"; $("radarBath").value="idle";
+      $("pirLiv").value=0; $("doorBed").value="0"; $("fall").value=0.12;
+      state.focusRoom = data.room;
+      state.predictiveControl = data.predictive;
+      showSceneInfo(data);
+    }
+    
+    // 旧场景保留（兼容性）
+    if(scene==="normal"){
+      // 日常场景：卧室有人睡眠，其他房间无人
+      // 目标：卧室Humidex约27-28（舒适），其他房间可稍高
+      $("t_bed").value=24.5; $("t_liv").value=24.0; $("t_bath").value=26.5;
+      $("rh").value=52; $("hour").value=21;
+      $("radarBed").value="sleep"; $("radarLiv").value="idle"; $("radarBath").value="idle";
+      $("pirLiv").value=0; $("doorBed").value="0"; $("fall").value=0.12;
+      addLog("场景", "日常场景：卧室有人睡眠，温度24.5°C，湿度52%，预计Humidex约27（舒适）");
+    }
+    if(scene==="sleep"){
+      // 夜间睡眠：卧室有人，需要更舒适的温度
+      // 目标：卧室Humidex约26-27（非常舒适）
+      $("t_bed").value=24.2; $("t_liv").value=23.8; $("t_bath").value=26.0;
+      $("rh").value=50; $("hour").value=23;
+      $("radarBed").value="sleep"; $("radarLiv").value="idle"; $("radarBath").value="idle";
+      $("pirLiv").value=0; $("doorBed").value="0"; $("fall").value=0.10;
+      addLog("场景", "夜间睡眠：卧室温度24.2°C，湿度50%，预计Humidex约26（非常舒适）");
+    }
+    if(scene==="work"){
+      // 白天工作：客厅有人静坐，活动量稍高，需要稍低温度
+      // 目标：客厅Humidex约26-27（舒适，考虑met值）
+      $("t_bed").value=24.0; $("t_liv").value=24.0; $("t_bath").value=26.0;
+      $("rh").value=55; $("hour").value=14;
+      $("radarBed").value="idle"; $("radarLiv").value="sit"; $("radarBath").value="idle";
+      $("pirLiv").value=1; $("doorBed").value="0"; $("fall").value=0.08;
+      addLog("场景", "白天工作：客厅有人静坐，温度24.0°C，湿度55%，预计Humidex约27（舒适）");
+    }
+    if(scene==="shower"){
+      // 洗澡场景：卫生间高温高湿，但这是临时状态
+      // 目标：其他房间保持舒适，卫生间会通过通风逐渐降低
+      $("t_bed").value=24.5; $("t_liv").value=24.0; $("t_bath").value=32.0;
+      $("rh").value=75; $("hour").value=20;
+      $("radarBed").value="idle"; $("radarLiv").value="idle"; $("radarBath").value="walk";
+      $("pirLiv").value=0; $("doorBed").value="0"; $("fall").value=0.42;
+      addLog("场景", "洗澡场景：卫生间高温高湿（临时），其他房间保持舒适，系统会自动调节");
+    }
+    if(scene==="window_open"){
+      // 开窗场景：卧室开窗，窗边温度降低
+      // 目标：卧室整体温度稍低，但通过调节仍能保持舒适
+      $("t_bed").value=24.0; $("t_liv").value=24.0; $("t_bath").value=26.0;
+      $("rh").value=48; $("hour").value=19;
+      $("radarBed").value="sit"; $("radarLiv").value="idle"; $("radarBath").value="idle";
+      $("pirLiv").value=0; $("doorBed").value="1"; $("fall").value=0.10;
+      state.rooms.bedroom.offsets.window = -1.2; // 窗边温度更低
+      state.rooms.bedroom.sensor.window.noise = 0.25; // 波动更大
+      addLog("场景", "开窗场景：卧室开窗，窗边温度降低约1.2°C，系统会自动调节保持舒适");
+    }
+    if(scene==="leave_home"){
+      // 离家场景：全屋无人，节能模式
+      // 目标：温度可稍高，但仍在可接受范围
+      $("t_bed").value=24.5; $("t_liv").value=24.5; $("t_bath").value=26.0;
+      $("rh").value=50; $("hour").value=11;
+      $("radarBed").value="idle"; $("radarLiv").value="idle"; $("radarBath").value="idle";
+      $("pirLiv").value=0; $("doorBed").value="0"; $("fall").value=0.05;
+      addLog("场景", "离家场景：全屋无人，节能模式，温度保持在舒适范围");
+    }
+    if(scene==="compare_predictive"){
+      // 对比场景：模拟温度快速上升的情况，展示预测vs不预测的差异
+      // 设置一个初始舒适但会快速变热的场景（卧室和客厅都有人）
+      $("t_bed").value=25.8; $("t_liv").value=25.5; $("t_bath").value=27.0;
+      $("rh").value=62; $("hour").value=15;
+      $("radarBed").value="sit"; $("radarLiv").value="sit"; $("radarBath").value="idle";
+      $("pirLiv").value=1; $("doorBed").value="0"; $("fall").value=0.10;
+      
+      // 确保房间有人（占用状态）
+      state.rooms.bedroom.occ.occupied = true;
+      state.rooms.bedroom.occ.p = 0.85;
+      state.rooms.living.occ.occupied = true;
+      state.rooms.living.occ.p = 0.80;
+      
+      // 设置初始温度
+      state.rooms.bedroom.baseT = 25.8;
+      state.rooms.living.baseT = 25.5;
+      
+      // 设置一个明显的上升趋势（模拟下午阳光照射导致温度上升）
+      state.rooms.bedroom.pred.model = {init:true, level:25.8, trend:0.18}; // 每步上升0.18°C
+      state.rooms.living.pred.model = {init:true, level:25.5, trend:0.15};
+      
+      // 设置代谢率（静坐）
+      state.rooms.bedroom.met.value = 1.3;
+      state.rooms.bedroom.met.desc = "静坐";
+      state.rooms.living.met.value = 1.3;
+      state.rooms.living.met.desc = "静坐";
+      
+      // 聚焦到卧室（有老人的房间）
+      state.focusRoom = "bedroom";
+      const roomChips = document.querySelectorAll(".chip");
+      roomChips.forEach(c=>{
+        c.classList.toggle("active", c.dataset.room === "bedroom");
+      });
+      
+      addLog("对比场景", "🔬 对比场景已加载：卧室和客厅都有老人，当前舒适（Humidex约28），但预测15分钟后会闷热（Humidex约32+）");
+      addLog("对比提示", "💡 切换右上角预测性控制开关，观察：1) 设定温度的变化 2) 老人卡通形象的变化 3) 温度渐变调节过程");
+      showToast("对比场景已加载：切换预测开关查看差异，观察老人状态变化", "info");
+      
+      // 执行初始计算
+      step("compareSceneInit");
+      
+      // 确保初始计算完成，显示老人状态
+      setTimeout(()=>{
+        renderAll();
+        
+        // 自动演示：如果预测关闭，3秒后自动开启预测，展示差异
+        // 预测性控制开关已删除
+      }, 500);
+    }
+    
+    // 应用场景后，执行初始计算
+    // 先执行一次step，让系统计算初始状态（占用判断等）
+    step("applyScene");
+    
+    // 更新房间芯片和标签
+    const roomChips = document.querySelectorAll(".chip");
+    roomChips.forEach(c=>{
+      c.classList.toggle("active", c.dataset.room === state.focusRoom);
+    });
+    
+    // 渲染一次，确保状态正确显示
+    renderAll();
+    
+    // 快速迭代5-8次，模拟系统快速响应并达到稳定状态
+    let iterations = 0;
+    const maxIterations = 7;
+    const quickIterate = ()=>{
+      if(iterations < maxIterations){
+        iterations++;
+        
+        // 模拟系统响应：让实际温度逐渐接近设定温度
+        // 这是模拟空调/暖气的实际工作效果
+        ["bedroom","living","bathroom"].forEach(k=>{
+          const R = state.rooms[k];
+          if(R && R.ctrl && R.ctrl.setpoint){
+            const current = R.fusion.Tcombined || R.baseT;
+            const target = R.ctrl.setpoint;
+            const diff = target - current;
+            
+            // 每次迭代让温度接近设定值（模拟系统响应速度）
+            // 如果差距大，每次接近30%；如果差距小，每次接近50%
+            const convergenceRate = Math.abs(diff) > 1.0 ? 0.3 : 0.5;
+            const newTemp = current + diff * convergenceRate;
+            
+            // 更新baseT（模拟环境温度变化）
+            R.baseT = clamp(newTemp, 18, 35);
+            
+            // 同步更新输入控件值
+            const bedEl = $("t_bed");
+            const livEl = $("t_liv");
+            const bathEl = $("t_bath");
+            if(k === "bedroom" && bedEl) bedEl.value = R.baseT.toFixed(1);
+            else if(k === "living" && livEl) livEl.value = R.baseT.toFixed(1);
+            else if(k === "bathroom" && bathEl) bathEl.value = R.baseT.toFixed(1);
+          }
+        });
+        
+        // 执行一次完整的计算流程
+        step("sceneStabilize");
+        
+        // 继续迭代（间隔稍长，让用户能看到变化过程）
+        setTimeout(quickIterate, 150);
+      }else{
+        // 迭代完成，最终渲染并检查舒适状态
+        renderAll();
+        
+        // 检查所有有人的房间是否处于舒适状态
+        let allComfortable = true;
+        let comfortStatus = [];
+        ["bedroom","living","bathroom"].forEach(k=>{
+          const R = state.rooms[k];
+          if(R && R.occ && R.occ.occupied){
+            const hx = R.feel.hx;
+            const isComfort = hx < 29;
+            allComfortable = allComfortable && isComfort;
+            comfortStatus.push(`${roomName(k)}: Humidex ${r1(hx)} (${isComfort ? "舒适" : "需调节"})`);
+          }
+        });
+        
+        if(allComfortable){
+          addLog("场景稳定", "✅ 系统已自动调节，所有房间老人均处于舒适状态");
+          showToast("场景已应用，系统已自动调节到舒适状态 ✓", "success");
+        }else{
+          addLog("场景稳定", `⚠️ 系统正在调节中：${comfortStatus.join("; ")}`);
+          showToast("场景已应用，系统正在持续调节中...", "info");
+        }
+      }
+    };
+    
+    // 延迟开始迭代，让第一次step完成
+    setTimeout(quickIterate, 300);
+  }
+
+  // ===== Preference record =====
+  function recordPref(){
+    const F = state.rooms[state.focusRoom];
+    const sp = state.overrideOn ? state.overrideTemp : F.ctrl.setpoint;
+    const cell = state.pref[state.hour];
+    cell.sum += sp; cell.count += 1; cell.avg = cell.sum / cell.count;
+    addLog("偏好学习", `记录 ${roomName(state.focusRoom)} 在 ${String(state.hour).padStart(2,"0")}:00 偏好：${r1(sp)}°C（样本 ${cell.count}，均值 ${r1(cell.avg)}°C）`);
+    showToast(`偏好已记录：${String(state.hour).padStart(2,"0")}:00 → ${r1(cell.avg)}°C`, "success");
+    renderAll();
+  }
+
+  // ===== 防抖函数 =====
+  let renderAllTimer = null;
+  function debouncedRenderAll(){
+    if(renderAllTimer) clearTimeout(renderAllTimer);
+    renderAllTimer = setTimeout(()=>{
+      renderAll();
+      renderAllTimer = null;
+    }, 50); // 50ms防抖，提高性能
+  }
+
+  // ===== Bindings =====
+  function bind(){
+    const watchIds = ["hour","rh","t_bed","t_liv","t_bath","radarBed","radarLiv","radarBath","pirLiv","doorBed","fall","overrideOn","overrideTemp"];
+    watchIds.forEach(id=>{
+      const el = $(id);
+      if(el){
+        el.addEventListener("input", ()=>debouncedRenderAll()); // 使用防抖版本
+        el.addEventListener("change", ()=>step("uiChange"));
+      }
+    });
+
+    const autoSwitch = $("autoSwitch");
+    if(autoSwitch){
+      autoSwitch.addEventListener("click", ()=>{
+        // 如果正在执行Step顺序，点击则停止
+        if(state.autoStepRunning){
+          state.autoStepRunning = false;
+          state.auto = false;
+          state.autoStepCurrent = 0;
+          autoSwitch.classList.remove("on");
+          autoSwitch.setAttribute("aria-checked", "false");
+          addLog("自动模拟", "已停止Step顺序执行");
+          showToast("自动模拟已停止", "info");
+          return;
+        }
+        
+        // 开始执行Step顺序
+        state.auto = true;
+        state.autoStepRunning = true;
+        state.autoStepCurrent = 0;
+        autoSwitch.classList.add("on");
+        autoSwitch.setAttribute("aria-checked", "true");
+        addLog("自动模拟", "开始按Step顺序执行：Step 1→2→3→4→5→6，每步停留2秒");
+        showToast("自动模拟已开启：将按Step顺序执行", "success");
+        
+        // 开始执行Step顺序
+        startAutoStepSequence();
+      });
+    }
+    
+    // ===== 自动Step顺序执行（内部版本，供手动点击使用） =====
+    function startAutoStepSequence(){
+      // 调用外部函数
+      startAutoStepSequenceInternal();
+    }
+
+    const tickBtn = $("tickBtn");
+    if(tickBtn) tickBtn.addEventListener("click", ()=>step("manualStep"));
+    
+    const recordPrefBtn = $("recordPrefBtn");
+    if(recordPrefBtn) recordPrefBtn.addEventListener("click", ()=>recordPref());
+
+    const injectAnomalyBtn = $("injectAnomalyBtn");
+    if(injectAnomalyBtn){
+      injectAnomalyBtn.addEventListener("click", ()=>{
+      state.anomalyOnce=true;
+      addLog("异常准备", "下一步注入窗边温度点异常（掉线/不可信）。");
+      showToast("异常已注入：下一步生效", "warn");
+    });
+    }
+
+    const sceneSelect = $("sceneSelect");
+    if(sceneSelect){
+      sceneSelect.addEventListener("change", (e)=>{
+        // 如果正在执行，先停止
+        if(state.autoStepRunning){
+          state.autoStepRunning = false;
+          state.auto = false;
+          const progress = $("stepProgress");
+          if(progress) progress.style.display = "none";
+        }
+        
+        if(state.rooms.bedroom){
+      state.rooms.bedroom.offsets.window = +0.6;
+      state.rooms.bedroom.sensor.window.noise = 0.12;
+        }
+        
+        // 应用场景（会显示场景信息卡片，点击后自动开始执行）
+      applyScene(e.target.value);
+    });
+    }
+
+    function setFocus(room){
+      state.focusRoom = room;
+      [...document.querySelectorAll(".chip")].forEach(c=>c.classList.toggle("active", c.dataset.room===room));
+      [...document.querySelectorAll(".tab")].forEach(t=>t.classList.toggle("active", t.dataset.room===room));
+      
+      // 先执行一次计算，确保新房间的数据是最新的
+      step("focusChange");
+      
+      // 然后更新界面
+      renderAll();
+      addLog("聚焦切换", `当前聚焦房间：${roomName(room)}`);
+    }
+
+    const roomChips = $("roomChips");
+    if(roomChips){
+      roomChips.addEventListener("click",(e)=>{
+        const c = e.target.closest(".chip"); 
+        if(!c) return;
+      setFocus(c.dataset.room);
+    });
+    }
+    
+    const tabs = $("tabs");
+    if(tabs){
+      tabs.addEventListener("click",(e)=>{
+        const t = e.target.closest(".tab"); 
+        if(!t) return;
+      setFocus(t.dataset.room);
+    });
+    }
+    
+    ["room_bed","room_liv","room_bath"].forEach(id=>{
+      const el = $(id);
+      if(el) {
+        el.addEventListener("click", (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
+          const room = el.dataset.room;
+          // 如果房间被隐藏，先显示它
+          if(el.classList.contains("hidden")){
+            el.classList.remove("hidden");
+          }
+          setFocus(room);
+          renderAll();
+        });
+      }
+    });
+
+    // timeline steps
+    const timeline = $("timeline");
+    if(timeline){
+      timeline.addEventListener("click",(e)=>{
+        const s = e.target.closest(".step"); 
+        if(!s) return;
+      state.activeStep = parseInt(s.dataset.step,10);
+      renderAll();
+        const s2 = s.querySelector(".s2");
+        addLog("查看步骤", `切换到 Step ${state.activeStep}${s2 ? "（" + s2.textContent + "）" : ""}`);
+      highlightRoom(state.focusRoom, `查看 Step ${state.activeStep}`);
+    });
+    }
+
+    // sensor list click -> highlight room + log
+    const sensorList = $("sensorList");
+    if(sensorList){
+      sensorList.addEventListener("click",(e)=>{
+        const li = e.target.closest(".li"); 
+        if(!li) return;
+      const key = li.dataset.sensor;
+      const name = key==="bed"?"床头温度":(key==="win"?"窗边温度":"出风口温度");
+      highlightRoom(state.focusRoom, `点击温度源：${name}`);
+    });
+    }
+    
+    // 左侧面板收起/展开按钮
+    const leftCollapseBtn = $("leftCollapseBtn");
+    if(leftCollapseBtn){
+      // 初始化：默认隐藏按钮，只有在grid存在且未收起时才显示
+      const mainGrid = $("mainGrid");
+      if(mainGrid){
+        if(!mainGrid.classList.contains("left-collapsed")){
+          // 面板展开时，按钮显示在右侧
+          leftCollapseBtn.style.display = "flex";
+          leftCollapseBtn.style.opacity = "1";
+          leftCollapseBtn.style.pointerEvents = "auto";
+          leftCollapseBtn.style.left = "360px";
+        } else {
+          // 面板收起时，按钮显示在左侧
+          leftCollapseBtn.style.display = "flex";
+          leftCollapseBtn.style.opacity = "1";
+          leftCollapseBtn.style.pointerEvents = "auto";
+          leftCollapseBtn.style.left = "0";
+          leftCollapseBtn.textContent = "▶";
+        }
+      }
+      
+      leftCollapseBtn.addEventListener("click", (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        const mainGrid = $("mainGrid");
+        if(mainGrid){
+          const isCollapsed = mainGrid.classList.contains("left-collapsed");
+          if(isCollapsed){
+            mainGrid.classList.remove("left-collapsed");
+            leftCollapseBtn.textContent = "◀";
+            leftCollapseBtn.title = "收起虚拟传感器面板";
+            leftCollapseBtn.style.left = "360px";
+          }else{
+            mainGrid.classList.add("left-collapsed");
+            leftCollapseBtn.textContent = "▶";
+            leftCollapseBtn.title = "展开虚拟传感器面板";
+            leftCollapseBtn.style.left = "0";
+          }
+        }
+      });
+    }
+  }
+
+  // ===== Auto loop =====
+  // 注意：自动模拟已改为按Step顺序执行，不再使用此循环
+  // 保留此代码以防其他地方需要
+  // setInterval(()=>{
+  //   if(!state.auto || state.autoStepRunning) return; // 如果正在执行Step顺序，不执行此循环
+  //   autoJitter();
+  //   step("autoTick");
+  // }, 1000);
+
+  // ===== Init =====
+  function init(){
+    bind();
+
+    // 新增：初始化帮助面板
+    initHelpPanel();
+
+    // 新增：初始化术语高亮和工具提示（延迟执行，确保 DOM 已渲染）
+    setTimeout(initTooltips, 500);
+
+    addLog("启动", "已启动递进式 AI 分析：点 Step1~Step6 看 AI 思考过程；点温度源行可高亮房间。");
+    step("init");
+
+    // 新增：显示欢迎提示
+    setTimeout(()=>{
+      showToast("欢迎使用！点击右上角 ? 查看帮助", "info");
+    }, 1000);
+    
+    // 新增：开始监听手机端控制（通过URL参数）
+    startMobileControlSync();
+  }
+  
+  // ===== 手机端控制同步（WebSocket） =====
+  let mobileWS = null;
+  let mobileWSReconnectTimer = null;
+  
+  function startMobileControlSync(){
+    // 获取服务器地址
+    function getServerURL(){
+      const urlParams = new URLSearchParams(window.location.search);
+      const serverIP = urlParams.get('server') || window.location.hostname || 'localhost';
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${protocol}//${serverIP}:8080`;
+    }
+    
+    // 连接WebSocket
+    function connectWebSocket(){
+      const wsURL = getServerURL();
+      console.log('连接手机控制WebSocket:', wsURL);
+      
+      try{
+        mobileWS = new WebSocket(wsURL);
+        
+        mobileWS.onopen = () => {
+          console.log('手机控制WebSocket连接成功');
+          addLog("手机控制", "已连接到同步服务器，等待手机端控制...");
+          // 请求当前状态
+          mobileWS.send(JSON.stringify({ type: 'getState' }));
+        };
+        
+        mobileWS.onmessage = (event) => {
+          try{
+            const data = JSON.parse(event.data);
+            if(data.type === 'state'){
+              // 收到状态更新，应用控制
+              applyMobileControl(data.data);
+            }
+          }catch(e){
+            console.error('解析消息错误:', e);
+          }
+        };
+        
+        mobileWS.onerror = (error) => {
+          console.error('WebSocket错误:', error);
+        };
+        
+        mobileWS.onclose = () => {
+          console.log('手机控制WebSocket连接关闭，尝试重连...');
+          // 自动重连
+          if(mobileWSReconnectTimer) clearTimeout(mobileWSReconnectTimer);
+          mobileWSReconnectTimer = setTimeout(connectWebSocket, 3000);
+        };
+      }catch(e){
+        console.error('WebSocket连接失败:', e);
+        // 尝试重连
+        if(mobileWSReconnectTimer) clearTimeout(mobileWSReconnectTimer);
+        mobileWSReconnectTimer = setTimeout(connectWebSocket, 3000);
+      }
+    }
+    
+    // 应用手机端控制
+    function applyMobileControl(controlData){
+      try{
+        if(!controlData) return;
+        
+        let updated = false;
+        
+        // 更新场景选择（需要触发applyScene）
+        if(controlData.sceneSelect){
+          const sceneEl = $("sceneSelect");
+          if(sceneEl && sceneEl.value !== controlData.sceneSelect){
+            sceneEl.value = controlData.sceneSelect;
+            updated = true;
+            
+            // 如果正在执行，先停止
+            if(state.autoStepRunning){
+              state.autoStepRunning = false;
+              state.auto = false;
+              const progress = $("stepProgress");
+              if(progress) progress.style.display = "none";
+            }
+            
+            // 重置房间偏移
+            if(state.rooms.bedroom){
+              state.rooms.bedroom.offsets.window = +0.6;
+              state.rooms.bedroom.sensor.window.noise = 0.12;
+            }
+            
+            // 应用场景（会自动开始执行）
+            applyScene(controlData.sceneSelect);
+            addLog("手机控制", `已切换场景: ${controlData.sceneSelect}`);
+            return; // 场景切换后直接返回，不需要继续更新其他参数
+          }
+        }
+        
+        // 更新模拟时间
+        if(controlData.hour !== undefined){
+          const hourEl = $("hour");
+          if(hourEl && parseInt(hourEl.value) !== controlData.hour){
+            hourEl.value = controlData.hour;
+            const hourV = $("hourV");
+            if(hourV) hourV.textContent = `${controlData.hour.toString().padStart(2, '0')}:00`;
+            state.hour = controlData.hour;
+            updated = true;
+          }
+        }
+        
+        // 更新湿度
+        if(controlData.rh !== undefined){
+          const rh = parseInt(controlData.rh);
+          if(!isNaN(rh) && rh >= 20 && rh <= 90){
+            const rhEl = $("rh");
+            if(rhEl && parseInt(rhEl.value) !== rh){
+              rhEl.value = rh;
+              const rhV = $("rhV");
+              if(rhV) rhV.textContent = `${rh}%`;
+              state.rh = rh;
+              updated = true;
+            }
+          }
+        }
+        
+        // 更新温度
+        if(controlData.t_bed !== undefined){
+          const temp = parseFloat(controlData.t_bed);
+          if(!isNaN(temp) && temp >= 18 && temp <= 30){
+            const bedEl = $("t_bed");
+            if(bedEl && parseFloat(bedEl.value) !== temp){
+              bedEl.value = temp.toFixed(1);
+              const bedV = $("t_bedV");
+              if(bedV) bedV.textContent = `${temp.toFixed(1)}°C`;
+              state.rooms.bedroom.baseT = temp;
+              updated = true;
+            }
+          }
+        }
+        if(controlData.t_liv !== undefined){
+          const temp = parseFloat(controlData.t_liv);
+          if(!isNaN(temp) && temp >= 18 && temp <= 30){
+            const livEl = $("t_liv");
+            if(livEl && parseFloat(livEl.value) !== temp){
+              livEl.value = temp.toFixed(1);
+              const livV = $("t_livV");
+              if(livV) livV.textContent = `${temp.toFixed(1)}°C`;
+              state.rooms.living.baseT = temp;
+              updated = true;
+            }
+          }
+        }
+        if(controlData.t_bath !== undefined){
+          const temp = parseFloat(controlData.t_bath);
+          if(!isNaN(temp) && temp >= 20 && temp <= 40){
+            const bathEl = $("t_bath");
+            if(bathEl && parseFloat(bathEl.value) !== temp){
+              bathEl.value = temp.toFixed(1);
+              const bathV = $("t_bathV");
+              if(bathV) bathV.textContent = `${temp.toFixed(1)}°C`;
+              state.rooms.bathroom.baseT = temp;
+              updated = true;
+            }
+          }
+        }
+        
+        // 更新毫米波
+        if(controlData.radarBed){
+          const radarEl = $("radarBed");
+          if(radarEl && radarEl.value !== controlData.radarBed){
+            radarEl.value = controlData.radarBed;
+            updated = true;
+          }
+        }
+        if(controlData.radarLiv){
+          const radarEl = $("radarLiv");
+          if(radarEl && radarEl.value !== controlData.radarLiv){
+            radarEl.value = controlData.radarLiv;
+            updated = true;
+          }
+        }
+        if(controlData.radarBath){
+          const radarEl = $("radarBath");
+          if(radarEl && radarEl.value !== controlData.radarBath){
+            radarEl.value = controlData.radarBath;
+            updated = true;
+          }
+        }
+        
+        // 更新PIR
+        if(controlData.pirLiv !== undefined){
+          const pirEl = $("pirLiv");
+          if(pirEl && parseInt(pirEl.value) !== controlData.pirLiv){
+            pirEl.value = controlData.pirLiv;
+            const pirV = $("pirLivV");
+            if(pirV) pirV.textContent = controlData.pirLiv;
+            updated = true;
+          }
+        }
+        
+        // 更新门磁
+        if(controlData.doorBed){
+          const doorEl = $("doorBed");
+          if(doorEl && doorEl.value !== controlData.doorBed){
+            doorEl.value = controlData.doorBed;
+            updated = true;
+          }
+        }
+        
+        // 更新跌倒风险
+        if(controlData.fall !== undefined){
+          const fallEl = $("fall");
+          if(fallEl && parseFloat(fallEl.value) !== controlData.fall){
+            fallEl.value = controlData.fall;
+            const fallV = $("fallV");
+            if(fallV) fallV.textContent = parseFloat(controlData.fall).toFixed(2);
+            updated = true;
+          }
+        }
+        
+        // 更新手动覆盖
+        if(controlData.overrideOn){
+          const overrideEl = $("overrideOn");
+          if(overrideEl && overrideEl.value !== controlData.overrideOn){
+            overrideEl.value = controlData.overrideOn;
+            updated = true;
+          }
+        }
+        if(controlData.overrideTemp !== undefined){
+          const temp = parseFloat(controlData.overrideTemp);
+          if(!isNaN(temp) && temp >= 20 && temp <= 28){
+            const overrideTempEl = $("overrideTemp");
+            if(overrideTempEl && parseFloat(overrideTempEl.value) !== temp){
+              overrideTempEl.value = temp.toFixed(1);
+              const overrideTempV = $("overrideTempV");
+              if(overrideTempV) overrideTempV.textContent = `${temp.toFixed(1)}°C`;
+              state.overrideTemp = temp;
+              updated = true;
+            }
+          }
+        }
+        
+        // 如果有更新，重新计算并更新显示
+        if(updated){
+          step("mobileControl");
+          renderAll();
+          addLog("手机控制", "已同步手机端传感器数据");
+        }
+      }catch(e){
+        console.error('应用手机控制失败:', e);
+      }
+    }
+    
+    // 开始连接
+    connectWebSocket();
+  }
+  
+  // ============================================================
+  // Multi-Agent 流转可视化 JS
+  // ============================================================
+
+  const AGENT_NAMES = {
+    supervisor: "Supervisor",
+    perception: "感知Agent",
+    prediction: "预测Agent",
+    decision: "决策Agent",
+    verification: "验证Agent",
+    supervisor_start: "Supervisor",
+    supervisor_check: "Supervisor",
+  };
+
+  const AGENT_COLORS = {
+    supervisor: "rgba(10,132,255,.2)",
+    supervisor_start: "rgba(10,132,255,.2)",
+    supervisor_check: "rgba(10,132,255,.2)",
+    perception: "rgba(255,159,10,.2)",
+    prediction: "rgba(52,199,89,.2)",
+    decision: "rgba(175,82,222,.2)",
+    verification: "rgba(255,59,48,.2)",
+  };
+
+  let agentEngineOnline = false;
+
+  // 检测 Agent Engine 连接
+  async function checkAgentHealth(){
+    const dot = $("agentStatusDot");
+    const text = $("agentStatusText");
+    try{
+      const resp = await fetch("/api/agent/health");
+      const data = await resp.json();
+      if(data.agent_engine && data.agent_engine.status === "ok"){
+        agentEngineOnline = true;
+        if(dot) dot.style.background = "var(--green)";
+        if(text) text.textContent = "Agent Engine: 已连接 ✓";
+        $("agentFlowSection").style.display = "";
+        addLog("Agent", "Agent Engine 连接成功");
+        showToast("Agent Engine 已连接", "success");
+      } else {
+        throw new Error(data.agent_engine?.error || "offline");
+      }
+    } catch(e) {
+      agentEngineOnline = false;
+      if(dot) dot.style.background = "var(--red)";
+      if(text) text.textContent = "Agent Engine: 离线 ✗";
+      addLog("Agent", "Agent Engine 未连接: " + e.message);
+      showToast("Agent Engine 未连接，请先启动 Python 后端", "warn");
+    }
+  }
+
+  // 重置 Agent 流转图状态
+  function resetAgentNodes(){
+    ["supervisor","perception","prediction","decision","verification"].forEach(name=>{
+      const icon = $("agentIcon_" + name);
+      if(icon){
+        icon.style.background = "rgba(0,0,0,.04)";
+        icon.style.borderColor = "rgba(0,0,0,.08)";
+        icon.style.transform = "";
+      }
+    });
+  }
+
+  // 激活指定 Agent 节点
+  function activateAgentNode(nodeName){
+    // 先把之前的变灰
+    resetAgentNodes();
+    // 映射节点名
+    let key = nodeName;
+    if(key === "supervisor_start" || key === "supervisor_check") key = "supervisor";
+    const icon = $("agentIcon_" + key);
+    if(icon){
+      const color = AGENT_COLORS[nodeName] || "rgba(10,132,255,.2)";
+      icon.style.background = color;
+      icon.style.borderColor = color.replace("0.2","0.6");
+      icon.style.transform = "scale(1.15)";
+    }
+  }
+
+  // 完成指定 Agent 节点
+  function completeAgentNode(nodeName){
+    let key = nodeName;
+    if(key === "supervisor_start" || key === "supervisor_check") key = "supervisor";
+    const icon = $("agentIcon_" + key);
+    if(icon){
+      icon.style.background = "rgba(52,199,89,.15)";
+      icon.style.borderColor = "rgba(52,199,89,.5)";
+      icon.style.transform = "";
+    }
+  }
+
+  // 添加 Agent 思考卡片
+  function addAgentThought(agentName, title, content, data){
+    const container = $("agentThoughts");
+    if(!container) return;
+    // 首次使用时清除占位文本
+    if(container.querySelector("div[style*='text-align:center']")){
+      container.innerHTML = "";
+    }
+    const card = document.createElement("div");
+    card.style.cssText = "padding:10px 12px;border-bottom:1px solid rgba(0,0,0,.05);animation:fadeIn 0.3s;";
+    const displayName = AGENT_NAMES[agentName] || agentName;
+    const color = AGENT_COLORS[agentName] || "rgba(0,0,0,.1)";
+
+    let dataHtml = "";
+    if(data && typeof data === "object"){
+      const entries = Object.entries(data).slice(0, 6);
+      if(entries.length > 0){
+        dataHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">';
+        entries.forEach(([k,v])=>{
+          let displayVal = typeof v === "object" ? JSON.stringify(v).substring(0,30) : String(v).substring(0,20);
+          dataHtml += `<span style="font-size:10px;padding:2px 6px;border-radius:8px;background:rgba(0,0,0,.04);color:var(--sub);">${k}: ${displayVal}</span>`;
+        });
+        dataHtml += "</div>";
+      }
+    }
+
+    card.innerHTML =
+      `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">` +
+        `<span style="font-size:10px;font-weight:900;padding:2px 8px;border-radius:8px;background:${color};color:var(--text);">${displayName}</span>` +
+        `<span style="font-size:11px;font-weight:800;">${title || ""}</span>` +
+      `</div>` +
+      `<div style="font-size:11px;color:var(--sub);line-height:1.5;">${content || ""}</div>` +
+      dataHtml;
+
+    container.appendChild(card);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  // 显示 Agent 结果摘要
+  function showAgentResultSummary(result){
+    const section = $("agentResultSummary");
+    const content = $("agentResultContent");
+    if(!section || !content) return;
+
+    section.style.display = "";
+    let html = "";
+
+    if(result.perception){
+      html += `<div><b>感知:</b> ${result.perception.occupancy_status}(${Math.round(result.perception.occupancy_probability*100)}%) | 房间: ${(result.perception.occupied_rooms||[]).join(",") || "无"}</div>`;
+    }
+    if(result.prediction){
+      html += `<div><b>预测:</b> 融合${result.prediction.fused_temp}°C | Humidex ${result.prediction.current_humidex} | ${result.prediction.comfort_level} | 趋势${result.prediction.trend}</div>`;
+    }
+    if(result.decision){
+      html += `<div><b>决策:</b> ${result.decision.action} → 目标${result.decision.target_temp}°C | 强度${result.decision.intensity} | 预计${result.decision.estimated_time_min}min</div>`;
+    }
+    if(result.verification){
+      html += `<div><b>验证:</b> ${result.verification.plan_approved ? "✅通过" : "❌未通过"}${result.verification.conflict_detected ? " | ⚠️冲突" : ""}${result.verification.requires_replanning ? " | 🔄重规划" : ""}</div>`;
+    }
+    if(result.duration_ms){
+      html += `<div style="margin-top:4px;color:var(--sub);font-size:10px;">Pipeline耗时: ${result.duration_ms}ms | ID: ${result.pipeline_id || ""}</div>`;
+    }
+    content.innerHTML = html;
+  }
+
+  // 运行 Agent 分析
+  async function triggerAgentAnalyze(){
+    if(!agentEngineOnline){
+      showToast("请先连接 Agent Engine", "warn");
+      checkAgentHealth();
+      return;
+    }
+
+    // 收集当前传感器数据
+    const F = state.rooms[state.focusRoom];
+    const sensorData = {
+      room: state.focusRoom,
+      temperature: {},
+      humidity: state.globalRH || 55,
+      hour: state.globalHour || 15,
+      mmwave_radar: "active",
+      pir: true,
+      door_contact: false,
+      fall_risk: false,
+      activity: "sitting",
+      prediction_enabled: true,
+    };
+    ["bedroom","living","bathroom"].forEach(k=>{
+      sensorData.temperature[k] = state.rooms[k]?.fusion?.Tcombined || 25;
+    });
+    if(F && F.occ){
+      sensorData.mmwave_radar = F.occ.occupied ? "active" : "idle";
+      sensorData.pir = F.occ.occupied;
+    }
+
+    // 重置 UI
+    resetAgentNodes();
+    $("agentThoughts").innerHTML = "";
+    $("agentResultSummary").style.display = "none";
+    addLog("Agent", "启动 Multi-Agent 分析...");
+    showToast("Agent 分析启动", "info");
+
+    try{
+      const resp = await fetch("/api/agent/analyze", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          sensor_data:sensorData,
+          scene_id: state.currentScene || null
+        })
+      });
+      const result = await resp.json();
+
+      if(result.error){
+        addLog("Agent", "分析失败: " + result.error);
+        showToast("Agent 分析失败", "warn");
+        return;
+      }
+
+      // 逐步展示 Agent 流转（动画效果）
+      const thoughts = result.thoughts || [];
+      let delay = 0;
+      for(let i = 0; i < thoughts.length; i++){
+        const t = thoughts[i];
+        setTimeout(()=>{
+          const agentKey = t.agent || "supervisor";
+          activateAgentNode(agentKey);
+          addAgentThought(agentKey, t.title, t.conclusion, t.data);
+          addLog("Agent", `[${AGENT_NAMES[agentKey]||agentKey}] ${t.title}`);
+          // 延迟后标记完成
+          setTimeout(()=>{ completeAgentNode(agentKey); }, 400);
+        }, delay);
+        delay += 800;
+      }
+
+      // 最终结果
+      setTimeout(()=>{
+        showAgentResultSummary(result);
+        addLog("Agent", `Pipeline完成 (${result.duration_ms}ms) - ${result.status}`);
+        showToast("Agent 分析完成 ✓", "success");
+      }, delay + 200);
+
+    } catch(e){
+      addLog("Agent", "请求失败: " + e.message);
+      showToast("Agent 请求失败", "warn");
+    }
+  }
+
+  // 加载决策历史
+  async function loadDecisionHistory(){
+    const container = $("decisionHistoryList");
+    if(!container) return;
+    try{
+      const resp = await fetch("/api/agent/last-result");
+      // 先尝试从 Agent Engine 获取完整历史
+      let decisions = [];
+      try{
+        const histResp = await fetch("/api/agent/decisions?limit=10");
+        if(histResp.ok){
+          const data = await histResp.json();
+          decisions = data.decisions || [];
+        }
+      }catch(e){}
+
+      if(decisions.length === 0){
+        container.innerHTML = '<div style="padding:12px;font-size:11px;color:var(--sub);text-align:center;">暂无决策记录，运行 Agent 分析后会自动记录</div>';
+        return;
+      }
+
+      let html = "";
+      decisions.forEach((d, i) => {
+        const actionEmoji = {"cool":"❄️","heat":"🔥","emergency_cool":"🚨","none":"✅"}[d.action] || "⚡";
+        const timeStr = d.created_at || new Date(d.timestamp * 1000).toLocaleTimeString();
+        const verified = d.verified ? "✓通过" : "✗未通过";
+        const conflict = d.conflict_detected ? " ⚠️冲突" : "";
+
+        html += `<div style="padding:8px 12px;border-bottom:1px solid rgba(0,0,0,.04);${i===0?'background:rgba(10,132,255,.03);':''}">` +
+          `<div style="display:flex;align-items:center;justify-content:space-between;">` +
+            `<span style="font-size:11px;font-weight:800;">${actionEmoji} ${d.room || '?'} → ${d.action || 'none'}</span>` +
+            `<span style="font-size:9px;color:var(--sub);">${timeStr}</span>` +
+          `</div>` +
+          `<div style="font-size:10px;color:var(--sub);margin-top:2px;">` +
+            `${d.target_temp ? d.target_temp + '°C' : '—'} | ${d.comfort_level || '?'} | Hx=${d.humidex || '?'} | ${d.intensity || ''} | ${verified}${conflict}` +
+          `</div>` +
+          `<div style="font-size:9px;color:var(--sub);opacity:0.7;margin-top:1px;">` +
+            `预测=${d.prediction_method || '?'} | ${d.duration_ms || 0}ms | ${d.control_executed ? '🔌已执行' : ''}` +
+          `</div>` +
+        `</div>`;
+      });
+      container.innerHTML = html;
+    }catch(e){
+      container.innerHTML = '<div style="padding:12px;font-size:11px;color:var(--sub);text-align:center;">无法加载决策历史</div>';
+    }
+  }
+
+  // 加载调度器状态
+  async function loadSchedulerStatus(){
+    try{
+      const resp = await fetch("/api/agent/scheduler");
+      if(!resp.ok) return;
+      const data = await resp.json();
+      const dot = $("schedulerDot");
+      const text = $("schedulerStatusText");
+      const count = $("schedulerAnalyzeCount");
+      if(data.running){
+        if(dot) dot.style.background = "var(--green)";
+        if(text) text.textContent = "调度器: 运行中";
+        if(count) count.textContent = `已分析 ${data.analyze_count || 0} 次`;
+      } else {
+        if(dot) dot.style.background = "var(--sub)";
+        if(text) text.textContent = "调度器: 未运行";
+      }
+    }catch(e){}
+  }
+
+  // 页面加载后自动检测 Agent Engine
+  setTimeout(()=>{
+    checkAgentHealth();
+    loadDecisionHistory();
+    loadSchedulerStatus();
+  }, 2000);
+
+  init();
+</script>
+</body>
+</html>

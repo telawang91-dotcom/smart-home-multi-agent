@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  smart-home:
+    build: .
+    container_name: smart-home-multi-agent
+    ports:
+      - "8080:8080"   # Frontend + Node.js Gateway
+      - "8081:8081"   # Python Agent Engine (FastAPI docs)
+    environment:
+      - LLM_PROVIDER=mock
+      - AGENT_ENGINE_HOST=0.0.0.0
+      - AGENT_ENGINE_PORT=8081
+      - NODE_SERVER_URL=http://localhost:8081
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,0 +1,25 @@
+{
+  "name": "smart-home-comfort-system",
+  "version": "1.0.0",
+  "description": "全屋智能舒适与安全系统 - 基于AI的智能家居舒适度控制系统",
+  "main": "sync-server.js",
+  "scripts": {
+    "start": "node sync-server.js",
+    "dev": "node sync-server.js"
+  },
+  "keywords": [
+    "smart-home",
+    "ai",
+    "comfort-control",
+    "sensor-fusion",
+    "predictive-control"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.20.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
