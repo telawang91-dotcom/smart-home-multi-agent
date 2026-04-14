@@ -348,5 +348,3 @@ HA_TOKEN=your-long-lived-access-token
 - 支持从仿真环境切换到真实 Home Assistant 设备
 - 前端、后端、Agent 引擎、网关完整打通
 - 适合课程设计、比赛演示、毕业项目和原型验证
-
-如果你后面想把 README 再升级成“答辩展示版”，建议继续补一段 GIF 演示流程，比如“环境异常 -> Agent 分析 -> 自动控制 -> 页面反馈”。
